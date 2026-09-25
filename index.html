@@ -865,49 +865,64 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     openModal('add-content-modal');
 }
+        async function updateUserPoints(userId, newPoints) {
+    try {
+        // 1. Načti aktuální profil z DB
+        const { data: user, error: fetchError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        
+        if (fetchError || !user) return;
+        
+        const oldRank = getRankNameByPoints(user.points);
+        const newRank = getRankNameByPoints(newPoints);
+        
+        // 2. Aktualizuj body v DB
+        await supabaseClient
+            .from('profiles')
+            .update({ points: newPoints })
+            .eq('id', userId);
+        
+        // 3. Pokud se změnila úroveň, vytvoř žádost o dárek
+        if (oldRank !== newRank) {
+            const key = user.username + '_' + newRank;
+            if (!levelNotifiedUsers[key]) {
+                levelNotifiedUsers[key] = true;
+                const reward = getRankByPoints(newPoints).reward;
+                
+                await addGiftRequest(userId, user.username, user.email, user.phone, user.address, oldRank, newRank, reward);
+                
+                setTimeout(() => {
+                    alert(`🎉 GRATULUJEME! DOSÁHL/A JSI NOVÉ ÚROVNĚ!
 
-        function updateUserPoints(username, newPoints) {
-            const user = usersDatabase.find(u => u.username === username);
-            if (!user) return;
-            const oldRank = getRankNameByPoints(user.points);
-            user.points = newPoints;
-            const newRank = getRankNameByPoints(newPoints);
-            if (oldRank !== newRank) {
-                const key = user.username + '_' + newRank;
-                if (!levelNotifiedUsers[key]) {
-                    levelNotifiedUsers[key] = true;
-                    const reward = getRankByPoints(user.points).reward;
-
-// ✅ PŘIDÁNO: Žádost o dárek do Admin panelu
-        addGiftRequest(user.username, oldRank, newRank, reward);
-
-                    setTimeout(() => {
-    alert(`🎉 GRATULUJEME! DOSÁHL/A JSI NOVÉ ÚROVNĚ!
-
-Tvé uživatelské jméno: ${user.username}
-Tvá e-mailová adresa: ${user.email}
+Uživatelské jméno: ${user.username}
+E-mail: ${user.email}
 
 Předchozí úroveň: ${oldRank}
 Nová úroveň: ${newRank} 🎉
 
-Tvá odměna: ${reward}
+Odměna: ${reward}
 
 📦 Dárek ti odešleme do 14 dnů od dosažení úrovně.
 ⚠️ UPOZORNĚNÍ: V případě zneužití systému (spamování nevhodných návodů) si vyhrazujeme právo odebrat body a pozastavit zaslání dárku.
 
 Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
-}, 500);
-                }
-            }
-            const lbUser = leaderboard.find(u => u.name === username);
-            if (lbUser) lbUser.points = newPoints;
-            else leaderboard.push({ name: username, points: newPoints });
-            if (currentUser.name === username) {
-                currentUser.points = newPoints;
-                document.getElementById('header-points').textContent = newPoints + ' b.';
-                document.getElementById('user-rank-badge').textContent = newRank;
+                }, 500);
             }
         }
+        
+        // 4. Aktualizace aktuálního uživatele (pokud je to on)
+        if (currentUser.id === userId) {
+            currentUser.points = newPoints;
+            document.getElementById('header-points').textContent = newPoints + ' b.';
+            document.getElementById('user-rank-badge').textContent = newRank;
+        }
+    } catch (err) {
+        console.error('Chyba při aktualizaci bodů:', err);
+    }
+}
 
         // ============================================================
         // 8. REGISTRACE A PŘIHLÁŠENÍ
@@ -2345,110 +2360,166 @@ async function submitContent() {
 // ============================================================
 let giftRequests = [];
 
-function addGiftRequest(username, oldRank, newRank, reward) {
-    const user = usersDatabase.find(u => u.username === username);
-    if (!user) return;
-    
-    // Kontrola, zda už žádost neexistuje
-    const exists = giftRequests.find(r => r.username === username && r.newRank === newRank && r.status === 'pending');
-    if (exists) return;
-    
-    giftRequests.push({
-        username: username,
-        email: user.email,
-        phone: user.phone,
-        address: user.username + ', ' + user.address,
-        oldRank: oldRank,
-        newRank: newRank,
-        reward: reward,
-        status: 'pending',
-        date: new Date().toLocaleString(),
-        note: ''
-    });
-    
-    renderGiftRequests();
+async function addGiftRequest(userId, username, email, phone, address, oldRank, newRank, reward) {
+    try {
+        // Kontrola, zda už žádost neexistuje
+        const { data: existing } = await supabaseClient
+            .from('gift_requests')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('new_rank', newRank)
+            .eq('status', 'pending')
+            .maybeSingle();
+        
+        if (existing) return;
+        
+        // Vložit novou žádost
+        const { error } = await supabaseClient
+            .from('gift_requests')
+            .insert({
+                user_id: userId,
+                username: username,
+                email: email,
+                phone: phone,
+                address: address,
+                old_rank: oldRank,
+                new_rank: newRank,
+                reward: reward,
+                status: 'pending'
+            });
+        
+        if (error) throw error;
+        
+        await renderGiftRequests();
+    } catch (err) {
+        console.error('Chyba při vytváření žádosti o dárek:', err);
+    }
 }
 
-function renderGiftRequests() {
+async function renderGiftRequests() {
     const container = document.getElementById('gift-requests-list');
     const countBadge = document.getElementById('gift-requests-count');
     const fullContainer = document.getElementById('gift-requests-full-list');
+    if (!container) return;
     
-    const pending = giftRequests.filter(r => r.status === 'pending');
-    if (countBadge) countBadge.textContent = pending.length;
-    
-    if (currentUser.role !== 'admin') {
-        if (container) container.innerHTML = `<p class="text-xs text-slate-400 italic">Pouze admin vidí žádosti.</p>`;
-        return;
-    }
-    
-    if (pending.length === 0) {
-        if (container) container.innerHTML = `<p class="text-xs text-slate-400 italic">Žádné nové žádosti o dárky.</p>`;
-        if (fullContainer) fullContainer.innerHTML = `<p class="text-sm text-slate-400 italic">Zatím žádné žádosti o dárky.</p>`;
-        return;
-    }
-    
-    const preview = pending.slice(0, 3);
-    if (container) {
+    try {
+        const { data, error } = await supabaseClient
+            .from('gift_requests')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const pending = data || [];
+        if (countBadge) countBadge.textContent = pending.length;
+        
+        // Pokud není admin, schováme seznam
+        if (currentUser.role !== 'admin') {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic">Pouze admin vidí žádosti.</p>';
+            return;
+        }
+        
+        if (pending.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic">Žádné nové žádosti o dárky.</p>';
+            if (fullContainer) fullContainer.innerHTML = '<p class="text-sm text-slate-400 italic">Zatím žádné žádosti o dárky.</p>';
+            return;
+        }
+        
+        // Náhled (3 poslední)
+        const preview = pending.slice(0, 3);
         container.innerHTML = preview.map(req => `
             <div class="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-xl text-xs">
                 <div class="flex-1 truncate">
                     <span class="font-bold text-slate-800">${req.username}</span>
-                    <span class="text-green-600 block truncate">${req.oldRank} → ${req.newRank} 🎉</span>
+                    <span class="text-green-600 block truncate">${req.old_rank} → ${req.new_rank} 🎉</span>
                     <span class="text-slate-500 block truncate text-[10px]">${req.reward}</span>
                 </div>
                 <div class="flex space-x-1 shrink-0 ml-2">
-                    <button onclick="markGiftAsSent('${req.username}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">📦 Odesláno</button>
+                    <button onclick="markGiftAsSent(${req.id})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">📦 Odesláno</button>
                 </div>
             </div>
         `).join('');
-    }
-    
-    if (fullContainer) {
-        fullContainer.innerHTML = giftRequests.map(req => `
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
-                <div class="flex justify-between items-start">
-                    <span class="font-bold text-slate-800 text-sm">${req.username}</span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-green-100 text-green-700' : req.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}">
-                        ${req.status === 'pending' ? '⏳ Čeká na odeslání' : req.status === 'sent' ? '✅ Odesláno' : '❌ Zrušeno'}
-                    </span>
-                </div>
-                <p class="text-xs text-slate-500">${req.oldRank} → ${req.newRank} 🎉</p>
-                <p class="text-xs text-slate-500">Odměna: ${req.reward}</p>
-                <p class="text-xs text-slate-500">Adresa: ${req.address}</p>
-                <p class="text-xs text-slate-500">Telefon: ${req.phone}</p>
-                <p class="text-xs text-slate-500">Email: ${req.email}</p>
-                <div class="flex justify-between text-[10px] text-slate-400"><span>Datum: ${req.date}</span></div>
-                ${req.status === 'pending' ? `
-                    <div class="flex gap-2 pt-1">
-                        <button onclick="markGiftAsSent('${req.username}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">📦 Označit jako odesláno</button>
-                        <button onclick="cancelGiftRequest('${req.username}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">❌ Zrušit</button>
+        
+        // Plný seznam (v modalu)
+        if (fullContainer) {
+            const { data: allData } = await supabaseClient
+                .from('gift_requests')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            const all = allData || [];
+            
+            fullContainer.innerHTML = all.map(req => `
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold text-slate-800 text-sm">${req.username}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-green-100 text-green-700' : req.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}">
+                            ${req.status === 'pending' ? '⏳ Čeká na odeslání' : req.status === 'sent' ? '✅ Odesláno' : '❌ Zrušeno'}
+                        </span>
                     </div>
-                ` : ''}
-                ${req.note ? `<p class="text-xs text-slate-500 italic">Poznámka: ${req.note}</p>` : ''}
-            </div>
-        `).join('');
+                    <p class="text-xs text-slate-500">${req.old_rank} → ${req.new_rank} 🎉</p>
+                    <p class="text-xs text-slate-500">Odměna: ${req.reward}</p>
+                    <p class="text-xs text-slate-500">Adresa: ${req.address || '—'}</p>
+                    <p class="text-xs text-slate-500">Telefon: ${req.phone || '—'}</p>
+                    <p class="text-xs text-slate-500">Email: ${req.email}</p>
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>Datum: ${new Date(req.created_at).toLocaleString('cs-CZ')}</span>
+                    </div>
+                    ${req.status === 'pending' ? `
+                        <div class="flex gap-2 pt-1">
+                            <button onclick="markGiftAsSent(${req.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">📦 Odesláno</button>
+                            <button onclick="cancelGiftRequest(${req.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">❌ Zrušit</button>
+                        </div>
+                    ` : ''}
+                    ${req.note ? `<p class="text-xs text-slate-500 italic">Poznámka: ${req.note}</p>` : ''}
+                </div>
+            `).join('');
+        } catch (err) {
+        console.error('Chyba při načítání žádostí o dárky:', err);
+        container.innerHTML = '<p class="text-xs text-red-500 italic">Chyba při načítání žádostí.</p>';
     }
 }
 
-function markGiftAsSent(username) {
+async function markGiftAsSent(requestId) {
     if (currentUser.role !== 'admin') return;
-    const req = giftRequests.find(r => r.username === username && r.status === 'pending');
-    if (!req) return;
-    req.status = 'sent';
-    req.note = `Odesláno: ${new Date().toLocaleString()}`;
-    renderGiftRequests();
-    alert(`✅ Dárek pro ${username} byl označen jako odeslaný.`);
+    
+    try {
+        await supabaseClient
+            .from('gift_requests')
+            .update({ 
+                status: 'sent',
+                note: `Odesláno: ${new Date().toLocaleString('cs-CZ')}`
+            })
+            .eq('id', requestId);
+        
+        await renderGiftRequests();
+        alert('✅ Dárek byl označen jako odeslaný.');
+    } catch (err) {
+        console.error('Chyba při označování dárku:', err);
+        alert('Chyba při označování dárku.');
+    }
 }
 
-function cancelGiftRequest(username) {
+async function cancelGiftRequest(requestId) {
     if (currentUser.role !== 'admin') return;
-    const req = giftRequests.find(r => r.username === username && r.status === 'pending');
-    if (!req) return;
-    req.status = 'cancelled';
-    req.note = `Zrušeno: ${new Date().toLocaleString()}`;
-    renderGiftRequests();
-    alert(`❌ Žádost pro ${username} byla zrušena.`);
+    if (!confirm('Opravdu chceš zrušit tuto žádost o dárek?')) return;
+    
+    try {
+        await supabaseClient
+            .from('gift_requests')
+            .update({ 
+                status: 'cancelled',
+                note: `Zrušeno: ${new Date().toLocaleString('cs-CZ')}`
+            })
+            .eq('id', requestId);
+        
+        await renderGiftRequests();
+        alert('❌ Žádost byla zrušena.');
+    } catch (err) {
+        console.error('Chyba při rušení žádosti:', err);
+        alert('Chyba při rušení žádosti.');
+    }
 }
 
 function renderGiftRequestsFull() {

@@ -2471,9 +2471,10 @@ async function renderGiftRequests() {
                         </div>
                     ` : ''}
                     ${req.note ? `<p class="text-xs text-slate-500 italic">Poznámka: ${req.note}</p>` : ''}
-                </div>
+              </div>
             `).join('');
-        } catch (err) {
+        }
+    } catch (err) {
         console.error('Chyba při načítání žádostí o dárky:', err);
         container.innerHTML = '<p class="text-xs text-red-500 italic">Chyba při načítání žádostí.</p>';
     }

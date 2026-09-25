@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Víme Jak - Videonávody a postupy na všechno</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .input-error {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 10px;
+            margin-top: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 font-sans min-h-screen flex flex-col items-center">
+
+    <!-- HLAVIČKA WEBU -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
+                <div class="bg-amber-500 text-white p-2.5 rounded-xl shadow-md shadow-amber-500/20">
+                    <i class="fa-solid fa-lightbulb text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-black tracking-tight text-slate-900">VÍME <span class="text-amber-500">JAK</span></span>
+                    <span class="block text-xs text-slate-400 font-semibold">vimejak.cz</span>
+                </div>
+            </div>
+
+            <div class="hidden md:flex flex-1 max-w-md mx-8">
+                <div class="relative w-full">
+                    <input type="text" id="global-search" oninput="handleSearch()" placeholder="Vyhledej z tisíců návodů (např. baterie, kola, wifi)..." class="w-full bg-slate-50 text-slate-800 pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition text-sm">
+                    <div class="absolute left-3.5 top-3 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <button id="add-content-btn" onclick="checkPermissionsAndOpenModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-3 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Přidat návod</span>
+                </button>
+
+                <button onclick="openModal('auth-modal')" class="border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-user-plus text-amber-500"></i>
+                    <span>Přihlášení / Registrace</span>
+                </button>
+                <button id="logout-btn" onclick="handleLogout()" class="hidden border border-slate-200 hover:bg-red-50 hover:border-red-200 text-slate-700 hover:text-red-600 px-3 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition flex items-center space-x-2">
+    <i class="fa-solid fa-right-from-bracket text-red-500"></i>
+    <span>Odhlásit se</span>
+</button>
+
+                <div class="hidden sm:flex items-center space-x-3 border-l pl-4 border-slate-200">
+                    <div class="text-right">
+                        <span class="block text-sm font-bold text-slate-900" id="header-username">Admin</span>
+                        <span id="user-rank-badge" class="inline-block bg-amber-50 text-amber-600 text-[10px] px-2 py-0.5 rounded-full font-bold border border-amber-100">Legenda</span>
+                    </div>
+                    <div class="relative cursor-pointer" onclick="openProfileModal()">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="w-10 h-10 rounded-xl object-cover border-2 border-amber-500">
+                        <span id="header-points" class="absolute -bottom-1 -right-1 bg-slate-950 text-white text-[9px] px-1.5 py-0.5 rounded-full font-black">99999 b.</span>
+                    </div>
+                </div>
+
+                
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO BANNER -->
+    <section class="w-full bg-[#0f172a] text-white py-12 lg:py-16 relative overflow-hidden flex flex-col items-center">
+        <div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div class="max-w-5xl mx-auto text-center px-4 space-y-6 relative z-10 flex flex-col items-center w-full">
+            <span class="inline-flex items-center space-x-2 bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">🚀 Společně tvoříme něco velkého</span>
+            <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight max-w-3xl">Někdy si prostě nevíme rady.<br><span class="text-amber-400">A od toho jsme tu my všichni!</span></h1>
+            <p class="text-slate-300 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">Právě začínáme a chceme být největší českou databází video tipů a návodů. Pomoz nám růst! Najdeš tu vše <strong class="text-white">od výměny kapajícího kohoutku přes recept na svíčkovou až po nastavení Wi-Fi či tipy na levný Island.</strong></p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pt-4 max-w-3xl">
+                <div class="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl text-left space-y-2">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-sm flex items-center justify-center">1</span>
+                        <h4 class="font-black text-amber-400 text-base">Nasdílej video z aplikací (+20b)</h4>
+                    </div>
+                    <p class="text-xs text-slate-300">Našel jsi na <strong class="text-white">YouTube, TikToku, Instagramu, Facebooku, Pinterestu</strong> nebo jinde skvělou radu? Vlož odkaz, popiš ho a ukaž ho komunitě!</p>
+                </div>
+                <div class="bg-amber-500/5 border border-amber-500/20 p-5 rounded-2xl text-left space-y-2">
+                    <div class="flex items-center space-x-3">
+                        <span class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-sm flex items-center justify-center">2</span>
+                        <h4 class="font-black text-amber-400 text-base">Vytvoř obrázkový či textový návod (+50b)</h4>
+                    </div>
+                    <p class="text-xs text-slate-300">Nemáš po ruce video? Nevadí! <strong class="text-white">Sepiš a nafoť podrobný návod</strong> krok za krokem. Dobře strukturovaný text s fotkami pomůže tisícům lidí stejně skvěle.</p>
+                </div>
+            </div>
+            <div class="w-full max-w-3xl bg-gradient-to-r from-amber-500/10 to-amber-500/20 border border-amber-500/30 rounded-2xl p-5 text-left flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="space-y-1">
+                    <h4 class="text-amber-400 font-extrabold text-sm uppercase tracking-wide flex items-center gap-2"><i class="fa-solid fa-trophy text-amber-500"></i> SBÍREJ BODY A ODEMYKEJ SUPERSCHOPNOSTI!</h4>
+                    <p class="text-xs text-slate-300 leading-relaxed max-w-xl">Aktivitou na webu sbíráš body, které tě posouvají v celkovém žebříčku kutilů. S vyšší úrovní získáš <strong class="text-white">práva na schvalování</strong>, <strong class="text-white">hodnotné dárky</strong> a možnost surfovat <strong class="text-white">zcela bez reklam</strong>!</p>
+                </div>
+                <div class="shrink-0">
+                    <button onclick="openModal('all-leaderboard-modal')" class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-4 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/15">Zobrazit žebříček</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- KATEGORIE A NÁPOVĚDA -->
+    <section class="bg-white border-b border-slate-100 py-10 w-full flex flex-col items-center shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-8">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-black text-slate-900 flex items-center space-x-2">
+                    <span class="text-amber-500"><i class="fa-solid fa-shapes"></i></span>
+                    <span>Co tě zajímá? Vyber si kategorii:</span>
+                </h3>
+                <button onclick="resetFilters()" id="reset-filter-btn" class="hidden text-xs font-bold text-amber-500 hover:underline bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">Zrušit filtr</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" id="categories-grid"></div>
+            <div id="subcategories-panel" class="hidden bg-slate-50 border border-slate-200/60 rounded-2xl p-4 transition-all duration-300">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Upřesnit výběr:</span>
+                <div id="subcategories-list" class="flex flex-wrap gap-2"></div>
+            </div>
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-5 text-left space-y-4 text-white shadow-md">
+                <button onclick="toggleHelp()" class="w-full flex items-center justify-between text-amber-400 font-bold text-xs uppercase tracking-wider focus:outline-none">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-circle-question text-amber-500 text-sm"></i> Nápověda: Jak sem správně vložit video nebo návod?</span>
+                    <i id="help-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="help-content" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800/80 transition-all duration-300 text-sm">
+                    <div class="space-y-2">
+                        <span class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-link text-amber-500"></i> Jak vložit video z aplikací:</span>
+                        <ol class="list-decimal list-inside space-y-2 text-slate-300 text-xs">
+                            <li>Otevři video v libovolné aplikaci (YT, TikTok, IG, FB, atd.).</li>
+                            <li>Klikni na tlačítko <strong class="text-white">„Sdílet“</strong> a zvol <strong class="text-white">„Kopírovat odkaz“</strong>.</li>
+                            <li>Klikni u nás na „Přidat návod“ a vlož odkaz do pole pro video.</li>
+                        </ol>
+                    </div>
+                    <div class="space-y-2">
+                        <span class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-file-pen text-amber-500"></i> Jak vytvořit textový/foto návod:</span>
+                        <ul class="list-disc list-inside space-y-2 text-slate-300 text-xs">
+                            <li>Klikni nahoře na <strong class="text-white">„Přidat návod“</strong>.</li>
+                            <li>Pole pro video odkaz <strong class="text-white">nechej prázdné</strong>.</li>
+                            <li>Do pole popis detailně <strong class="text-white">sepiš postup krok za krokem</strong>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HLAVNÍ OBSAH -->
+    <main class="max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full flex justify-center">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
+                        <div class="lg:col-span-2 space-y-6 flex flex-col">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                    <div class="space-y-1">
+                        <h3 class="text-lg font-black text-slate-900" id="feed-title">Poslední přidané tipy a návody</h3>
+                        <p class="text-xs text-slate-400 font-medium" id="search-results-counter">Zobrazeno všech 8 návodů</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="sortFeed('latest')" id="sort-latest" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-950 text-white transition">Nejnovější</button>
+                        <button onclick="sortFeed('popular')" id="sort-popular" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Nejoblíbenější</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" id="video-feed"></div>
+                <div class="flex items-center justify-between border-t border-slate-200 pt-6" id="pagination-controls"></div>
+                
+                                <!-- 📢 REKLAMA - POD STATISTIKAMI -->
+                <div id="ad-sidebar-container" class="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-dashed border-amber-300 rounded-2xl p-4 shadow-sm mt-4 flex flex-col justify-center flex-1">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">📢 Reklama</span>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 text-center space-y-2">
+                        <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
+                            🛠️
+                        </div>
+                        <h4 class="font-black text-slate-800 text-sm">Nářadí pro kutily</h4>
+                        <p class="text-xs text-slate-500">Sleva 20 % na celý sortiment!</p>
+                        <button class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+                            Zjistit více →
+                        </button>
+                        <span class="text-[9px] text-slate-400 block">alza.cz</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div id="admin-panel" class="bg-white border-2 border-amber-500/50 rounded-2xl p-5 shadow-sm space-y-4">
+    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+        <span class="text-amber-500"><i class="fa-solid fa-flag"></i></span>
+        <span class="font-bold text-slate-800">Požadavky na smazání</span>
+        <span id="delete-requests-count" class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+    </h3>
+    <div id="delete-requests-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm"></div>
+    <div class="text-center pt-2 border-t border-slate-100">
+        <button onclick="openModal('admin-requests-modal')" class="text-xs font-bold text-amber-500 hover:underline transition">Spravovat požadavky &rarr;</button>
+   </div>
+    
+    <!-- 🆕 NOVÁ SEKCE: Žádosti o odeslání dárků -->
+    <div class="border-t border-slate-200 pt-3 mt-3">
+        <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 pb-2">
+            <span class="text-green-500"><i class="fa-solid fa-gift"></i></span>
+            <span class="font-bold text-slate-800">Žádosti o odeslání dárků</span>
+            <span id="gift-requests-count" class="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+        </h3>
+        <div id="gift-requests-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm">
+            <!-- Dynamicky -->
+        </div>
+        <div class="text-center pt-2 border-t border-slate-100">
+            <button onclick="openModal('gift-requests-modal')" class="text-xs font-bold text-green-500 hover:underline transition">Spravovat žádosti &rarr;</button>
+        </div>
+    </div>
+</div>
+                
+                <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+                        <span class="text-amber-500"><i class="fa-solid fa-gift"></i></span>
+                        <span class="font-bold text-slate-800">Úrovně a výhody</span>
+                    </h3>
+                    <div class="space-y-3" id="levels-list"></div>
+                </div>
+
+                <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+                        <span class="text-amber-500"><i class="fa-solid fa-trophy"></i></span>
+                        <span class="font-bold text-slate-800">Žebříček uživatelů</span>
+                    </h3>
+                    <div class="space-y-3" id="leaderboard-preview"></div>
+                    <div class="text-center pt-2 border-t border-slate-100">
+                        <button onclick="openModal('all-leaderboard-modal')" class="text-xs font-bold text-amber-500 hover:underline transition">Zobrazit celý žebříček &rarr;</button>
+                    </div>
+                </div>
+                <!-- 📊 STATISTIKY (pod žebříčkem) -->
+                <div class="bg-white border border-slate-200/80 rounded-xl px-4 py-3 shadow-sm mt-4">
+                    <div class="flex items-center justify-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                        <i class="fa-solid fa-chart-simple text-blue-400 text-xs"></i>
+                        <span class="text-xs font-bold text-slate-600">Statistiky</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] text-slate-500">
+                        <div class="flex items-center gap-1.5">
+                            <span>👀</span>
+                            <strong id="stats-today" class="text-slate-800">0</strong>
+                            <span>Návštěvy dnes</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>🟢</span>
+                            <strong id="stats-online" class="text-blue-600">0</strong>
+                            <span>Online</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>👤</span>
+                            <strong id="stats-users" class="text-green-600">0</strong>
+                            <span>Celkem zaregistrovaných uživatelů</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span>📊</span>
+                            <strong id="stats-total" class="text-slate-700">0</strong>
+                            <span>Celkem návštěv od spuštění webu</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>                                                                                       
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-12 py-8 w-full">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-4">
+            <div class="flex items-center justify-center space-x-2 text-white">
+                <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                <span class="font-black">VÍME JAK</span>
+            </div>
+            <p class="text-[10px] text-slate-600">&copy; 2026 Víme Jak. Všechna práva vyhrazená komunitě.</p>
+        </div>
+    </footer>
+
+    <!-- MODÁLNÍ OKNO: PŘIHLÁŠENÍ & REGISTRACE -->
+    <div id="auth-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 p-5 flex flex-col space-y-4">
+                <div class="flex justify-between items-center text-white">
+                    <h3 class="text-lg font-black flex items-center gap-2">
+                        <i class="fa-solid fa-user-lock text-amber-500"></i>
+                        <span id="auth-modal-title">Vítej zpět!</span>
+                    </h3>
+                    <button onclick="closeModal('auth-modal')" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                    <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 text-center py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition">Přihlášení</button>
+                    <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 text-center py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">Registrace</button>
+                </div>
+            </div>
+
+            <form id="login-form" onsubmit="handleLogin(event)" class="p-6 space-y-4 text-sm overflow-y-auto custom-scrollbar">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">E-mailová adresa *</label>
+                    <input type="text" id="login-username" required placeholder="Zadej svůj e-mail..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Heslo *</label>
+                        <a href="#" class="text-[11px] text-amber-500 hover:underline font-bold">Zapomenuté heslo?</a>
+                    </div>
+                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                </div>
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl transition text-sm shadow-md mt-2">Přihlásit se</button>
+            </form>
+
+            <form id="register-form" onsubmit="handleRegister(event)" class="p-6 space-y-4 text-sm overflow-y-auto custom-scrollbar hidden">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Uživatelské jméno *</label>
+                    <input type="text" id="reg-username" required placeholder="Např. KutilPavel" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                    <span class="error-message hidden" id="reg-username-error">Min. 3 znaky, povolena písmena, číslice a mezery (např. CerbyGerby1)</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">E-mailová adresa *</label>
+                    <input type="email" id="reg-email" required placeholder="pavel@email.cz" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                    <span class="error-message hidden" id="reg-email-error">Zadej platnou e-mailovou adresu</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Heslo *</label>
+                    <input type="password" id="reg-password" required placeholder="Zadej silné heslo..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                    <span class="error-message hidden" id="reg-password-error">Min. 8 znaků, obsahuj číslici a velké písmeno</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Adresa pro zaslání dárků *</label>
+                    <input type="text" id="reg-address" required placeholder="Povinný formát: jméno, ulice (s číslem nebo bez), město, PSČ (např. Jan Novák, Novákova 1, Praha, 10000)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                    <<span class="error-message hidden" id="reg-address-error">Adresa musí být ve formátu: jméno, ulice (s číslem nebo bez), město, PSČ (např. Jan Novák, Novákova 1, Praha, 10000) - jednotlivé části oddělujte ČÁRKOU!</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Telefon *</label>
+                    <input type="tel" id="reg-phone" required placeholder="Např. 123456789 nebo 420123456789" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
+                    <span class="error-message hidden" id="reg-phone-error">Zadej platné telefonní číslo (9 číslic bez předvolby, např. 123456789, nebo 12 číslic s předvolbou, např. 420123456789)</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-200/50 rounded-xl p-3 text-xs text-amber-800 flex gap-2">
+                    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 shrink-0"></i>
+                    <span>Po registraci ti na zadanou adresu zašleme <strong>potvrzovací odkaz</strong>.</span>
+                </div>
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl transition text-sm shadow-md">Registrovat se</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODÁLNÍ OKNO: ADMIN POŽADAVKY -->
+    <div id="admin-requests-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+                <h3 class="text-lg font-black flex items-center space-x-2"><i class="fa-solid fa-flag text-amber-400"></i><span>Správa požadavků na smazání</span></h3>
+                <button onclick="closeModal('admin-requests-modal')" class="text-slate-400 hover:text-white transition text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar" id="admin-requests-full-list"></div>
+        </div>
+    </div>
+
+    <!-- MODÁLNÍ OKNO: ŽÁDOSTI O ODESLÁNÍ DÁRKŮ -->
+<div id="gift-requests-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+            <h3 class="text-lg font-black flex items-center space-x-2">
+                <i class="fa-solid fa-gift text-green-400"></i>
+                <span>Správa žádostí o odeslání dárků</span>
+            </h3>
+            <button onclick="closeModal('gift-requests-modal')" class="text-slate-400 hover:text-white transition text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar" id="gift-requests-full-list">
+            <!-- Plní se dynamicky -->
+        </div>
+    </div>
+</div>
+
+    <!-- MODÁLNÍ OKNO: ŽEBŘÍČEK -->
+    <div id="all-leaderboard-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+                <h3 class="text-lg font-black flex items-center space-x-2"><i class="fa-solid fa-trophy text-amber-400"></i><span>Celkový žebříček</span></h3>
+                <button onclick="closeModal('all-leaderboard-modal')" class="text-slate-400 hover:text-white transition text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 bg-slate-50 border-b border-slate-100">
+                <input type="text" id="leaderboard-search" oninput="filterLeaderboard()" placeholder="Hledat uživatele..." class="w-full bg-white text-slate-800 pl-4 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-xs">
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 space-y-3 custom-scrollbar" id="full-leaderboard-list"></div>
+        </div>
+    </div>
+
+<!-- MODÁLNÍ OKNO: PŘIDÁNÍ NÁVODU -->
+<div id="add-content-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+    <div class="bg-white w-full max-w-xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+            <h3 class="text-lg font-black">Přidat nový tip nebo návod</h3>
+            <button onclick="closeModal('add-content-modal')" class="text-slate-400 hover:text-white transition text-xl"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar text-sm">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Hlavní kategorie návodu *</label>
+                <select id="form-category" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50"></select>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Název návodu *</label>
+                    <input type="text" id="form-title" placeholder="Např. Jak vyměnit stěrače..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Odkaz na video (nepovinné)</label>
+                    <input type="text" id="form-video-url" placeholder="Zkopíruj odkaz z YouTube, TikToku..." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Popis / Postup krok za krokem *</label>
+                    <textarea id="form-description" rows="6" placeholder="Zde napiš postup...&#10;&#10;Pro textový návod použij číslovaný seznam:&#10;1. Co udělat&#10;2. Co udělat&#10;3. Co udělat&#10;...&#10;&#10;Pro video návod stačí krátký popis (nepovinné)." class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none">1.
+2.
+3. </textarea>
+<div class="bg-amber-50 border border-amber-200/50 rounded-lg p-3 mt-2 text-[10px] text-amber-800 space-y-2">
+    <p class="font-bold text-xs">💡 Nápověda:</p>
+    <div class="space-y-1">
+        <p><strong>📝 Textový návod:</strong> Piš ve formátu <strong>„1. …", „2. …", „3. …"</strong> – bude to přehledné a jednotné.</p>
+        <p><strong>🎥 Video návod:</strong> Stačí název + odkaz. Popis je nepovinný.</p>
+        <p><strong>📷 Fotky:</strong> Najdi fotku na internetu, klikni na ni <strong>pravým tlačítkem</strong> → <strong>„Kopírovat odkaz na obrázek"</strong> a vlož odkaz do pole.</p>
+        <p class="text-[9px] italic">⚠️ „Kopírovat obrázek" nefunguje – musíš zvolit „Kopírovat odkaz na obrázek".</p>
+    </div>
+</div>
+<div>
+    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 mt-3">Odkazy na fotky (min. 3, neomezeně)</label>
+        <div id="image-fields-container" class="space-y-2">
+        <input type="text" id="form-image-url-1" placeholder="Odkaz na 1. fotku (https://...)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs">
+        <input type="text" id="form-image-url-2" placeholder="Odkaz na 2. fotku (https://...)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs">
+        <input type="text" id="form-image-url-3" placeholder="Odkaz na 3. fotku (https://...)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs">
+    </div>
+    <button type="button" onclick="addImageField()" class="mt-2 w-full bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold transition">
+        + Přidat další fotku
+    </button>
+</div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-end space-x-2">
+            <button onclick="closeModal('add-content-modal')" class="px-4 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition text-sm">Zrušit</button>
+            <button onclick="submitContent()" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition text-sm shadow-md">Publikovat</button>
+        </div>
+    </div>
+</div>
+
+    <!-- MODÁLNÍ OKNO: PROFIL -->
+    <div id="profile-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-slate-900 text-white p-6 relative">
+                <button onclick="closeModal('profile-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white transition text-lg"><i class="fa-solid fa-xmark"></i></button>
+                <div class="flex items-center space-x-4">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" alt="Avatar" class="w-16 h-16 rounded-2xl object-cover border-4 border-amber-500">
+                    <div>
+                        <h3 class="text-xl font-black" id="profile-username">Admin</h3>
+                        <span id="profile-rank-tag" class="text-xs bg-amber-500 text-white px-2.5 py-0.5 rounded-full font-bold">Legenda</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 space-y-6 text-sm">
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="block text-2xl font-black text-slate-900" id="profile-points">99999</span>
+                        <span class="text-xs text-slate-400 font-medium">Celkem bodů</span>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span class="block text-2xl font-black text-slate-900" id="profile-videos-count">0</span>
+                        <span class="text-xs text-slate-400 font-medium">Sdílených rad</span>
+                    </div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200/50 rounded-xl p-4 space-y-2">
+                    <h4 class="font-black text-amber-800 text-xs uppercase tracking-wider">🏆 Tvoje odměny</h4>
+                    <div id="profile-rewards" class="text-xs text-slate-700 space-y-1"></div>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60 space-y-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500 font-bold">Postup na další úroveň:</span>
+                        <span class="text-slate-950 font-black" id="profile-progress-text">---</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                        <div id="profile-progress-bar" class="bg-amber-500 h-full transition-all duration-500" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODÁLNÍ OKNO: DETAIL VIDEA -->
+    <div id="detail-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden z-50 items-center justify-center p-2 sm:p-4">
+    <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row" style="height: 85vh;">
+        
+                <!-- LEVÁ ČÁST: VIDEO/FOTKY + REKLAMA POD TÍM -->
+        <div class="w-full lg:w-3/5 flex flex-col h-full">
+            <!-- 🖼️ VIDEO NEBO FOTKY -->
+            <div id="detail-media-container" class="bg-slate-900 flex items-center justify-center relative overflow-hidden" style="flex: 8;">
+                <button onclick="closeModal('detail-modal')" class="absolute top-4 left-4 z-50 bg-slate-900/80 hover:bg-slate-900 text-white w-10 h-10 rounded-full flex items-center justify-center transition lg:hidden">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div id="video-container" class="w-full h-full"></div>
+                <div id="detail-image-container" class="hidden w-full h-full p-3 overflow-y-auto custom-scrollbar"></div>
+            </div>
+            
+            <!-- 📢 REKLAMA - POD VIDEEM/FOTKAMI -->
+            <div id="ad-video-container" class="bg-gradient-to-r from-amber-50 to-amber-100 border-t-2 border-dashed border-amber-300 p-4 overflow-hidden flex flex-col justify-center" style="flex: 2;">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-2xl">🏠</div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm">Rekonstrukce bytu? Poradíme!</h4>
+                            <p class="text-xs text-slate-600">15 let zkušeností. Nezávazná nabídka zdarma.</p>
+                        </div>
+                    </div>
+                    <button class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap">
+                        Navštívit →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRAVÁ ČÁST: NÁVOD A KOMENTÁŘE (BEZ VIDEA!) -->
+        <div class="w-full lg:w-2/5 flex flex-col h-full overflow-hidden bg-white">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-start shrink-0">
+                <div class="space-y-1 pr-6">
+                    <div id="detail-category" class="text-xs font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1.5"></div>
+                    <h3 id="detail-title" class="text-lg font-black text-slate-900 leading-snug"></h3>
+                </div>
+                <button onclick="closeModal('detail-modal')" class="hidden lg:flex text-slate-400 hover:text-slate-600 text-2xl transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 space-y-6 custom-scrollbar text-sm">
+                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
+                            <i class="fa-regular fa-user text-xs"></i>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-slate-400 font-bold uppercase">Autor návodu</span>
+                            <span id="detail-author" class="font-extrabold text-slate-800 text-xs">--</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 text-xs text-slate-400">
+                        <span class="flex items-center gap-1"><i class="fa-regular fa-eye"></i> <span id="detail-views">0</span></span>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <h4 class="font-black text-slate-950 uppercase text-xs tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice text-amber-500"></i> Postup krok za krokem:
+                    </h4>
+                    <div id="detail-text" class="text-slate-700 leading-relaxed bg-amber-50/50 p-4 rounded-xl border-2 border-amber-500/30 text-sm whitespace-pre-wrap break-words overflow-hidden max-w-full font-medium"></div>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-slate-100 flex-wrap">
+                    <button id="detail-like-btn" class="flex-1 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 min-w-[100px]">
+                        <i class="fa-regular fa-heart"></i> Poděkovat (<span id="detail-likes-count">0</span>)
+                    </button>
+                    <button id="detail-delete-request-btn" onclick="requestDelete()" class="hidden bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 text-slate-700 hover:text-red-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flag"></i> Nahlásit smazání
+                    </button>
+                    <button onclick="copyShareLink()" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-share-nodes"></i> Sdílet
+                    </button>
+                </div>
+                <div class="space-y-4 pt-4 border-t border-slate-100">
+                    <h4 class="font-black text-slate-950 uppercase text-xs tracking-wider flex items-center justify-between">
+                        <span>Diskuze (<span id="detail-comments-count">0</span>)</span>
+                        <span class="text-[10px] text-slate-400 lowercase font-medium">Buďte slušní</span>
+                    </h4>
+                    <div id="comments-list" class="space-y-3"></div>
+                    <form onsubmit="addNewComment(event)" class="space-y-2 pt-2" id="comment-form">
+                        <textarea id="comment-input" rows="2" required placeholder="Máš dotaz, nebo víš jak to udělat líp?..." class="w-full border border-slate-200 rounded-xl p-3 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-xs text-slate-800 placeholder-slate-400"></textarea>
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] text-slate-400 font-medium">Přispíváš jako <strong id="comment-author-name">Admin</strong></span>
+                            <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">Odeslat</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // ============================================================
+        // 1. RANK DEFINITIONS (4 ÚROVNĚ)
+        // ============================================================
+        // 0. SUPABASE KONFIGURACE
+// ============================================================
+const SUPABASE_URL = 'https://rynppuneqrnapsyplmlv.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_up1TsVGS-HlNhC4gS3NjxA_8xW1nYao';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const rankDefinitions = [
+            { name: "Nováček", min: 0, max: 4999, reward: "Základní přístup", icon: "fa-seedling", iconColor: "text-emerald-600", borderStyle: "border-l-[5px] border-l-[#a3e635]", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+            { name: "Mazák", min: 5000, max: 14999, reward: "Propiska s logem", icon: "fa-screwdriver-wrench", iconColor: "text-blue-500", borderStyle: "border-l-[5px] border-l-[#60a5fa]", badgeColor: "bg-blue-50 text-blue-700 border-blue-100" },
+            { name: "Guru", min: 15000, max: 29999, reward: "Tričko a hrníček s logem", icon: "fa-gear", iconColor: "text-teal-600", borderStyle: "border-l-[5px] border-l-[#2dd4bf]", badgeColor: "bg-teal-50 text-teal-700 border-teal-100" },
+            { name: "Legenda", min: 30000, max: Infinity, reward: "Gola sada + web bez reklam + možnost žádat o smazání", icon: "fa-star", iconColor: "text-amber-500", borderStyle: "border-l-[5px] border-l-[#facc15]", badgeColor: "bg-amber-50 text-amber-700 border-amber-100" }
+        ];
+
+        // ============================================================
+        // 2. VALIDACE
+        // ============================================================
+        function validateUsername(username) {
+    // Povoluje: písmena (s diakritikou), číslice, mezery
+    // Min. 3 znaky
+    return /^[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ0-9\s]{3,}$/.test(username);
+}
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+        function validatePassword(password) {
+            return password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password);
+        }
+        function validateAddress(address) {
+    // OČISTÍME VSTUP
+    const trimmed = address.trim();
+    
+    // ============================================
+    // ROZDĚLENÍ PODLE ČÁREK (FORMÁT: jméno, ulice, město, PSČ)
+    // ============================================
+    const parts = trimmed.split(',').map(p => p.trim());
+    
+    // Musí být přesně 4 části
+    if (parts.length !== 4) {
+        return false;
+    }
+    
+    const [fullName, street, city, psc] = parts;
+    
+    // ============================================
+    // 1. KONTROLA JMÉNA (jméno + příjmení)
+    // ============================================
+    // 2 slova, každé min. 2 písmena (s diakritikou)
+    const nameRegex = /[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]{2,}\s+[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]{2,}/;
+    const hasFullName = nameRegex.test(fullName);
+    
+    // ============================================
+    // 2. KONTROLA ULICE (povinná)
+    // ============================================
+    // Musí obsahovat alespoň 2 písmena
+    const streetRegex = /[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]{2,}/;
+    const hasStreet = streetRegex.test(street);
+    
+    // ============================================
+    // 3. KONTROLA MĚSTA/OBCE (povinné)
+    // ============================================
+    const hasCity = /[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]{2,}/.test(city);
+    
+    // ============================================
+    // 4. KONTROLA PSČ (5 číslic)
+    // ============================================
+    const hasPSC = /^\d{5}$/.test(psc.replace(/\s/g, ''));
+    
+    // ============================================
+    // VŠECHNY PODMÍNKY MUSÍ BÝT SPLNĚNY
+    // ============================================
+    return hasFullName && hasStreet && hasCity && hasPSC;
+}
+        function validatePhone(phone) {
+    // Odstraníme mezery, +, pomlčky, lomítka a závorky
+    const cleaned = phone.replace(/[\s\+\-\/\(\)]/g, '');
+    
+    // Povolené formáty:
+    // 1. 9 číslic (bez předvolby) - např. 123456789
+    // 2. 12 číslic (s předvolbou 420) - např. 420123456789
+    const isValid = /^\d{9}$/.test(cleaned) || /^\d{12}$/.test(cleaned);
+    
+    return isValid;
+}
+        function showFieldError(inputId, errorId) {
+            document.getElementById(inputId).classList.add('input-error');
+            document.getElementById(errorId).classList.remove('hidden');
+        }
+        function hideFieldError(inputId, errorId) {
+            document.getElementById(inputId).classList.remove('input-error');
+            document.getElementById(errorId).classList.add('hidden');
+        }
+
+        // ============================================================
+        // 3. UŽIVATELÉ A DATABÁZE
+        // ============================================================
+        let currentUser = { role: 'admin', name: 'Admin', points: 99999, address: 'Admin adresa', phone: '+420 123 456 789' };
+
+        let usersDatabase = [
+    { username: 'Admin', email: 'admin@vimejak.cz', password: 'Admin123', address: 'Admin adresa', phone: '+420 123 456 789', points: 99999 },
+    { username: 'Legenda', email: 'legenda@vimejak.cz', password: 'Legenda123', address: 'Praha 1', phone: '+420 777 888 999', points: 32000 },
+    // NOVÁČEK: nastaven na 4950 bodů (po přidání návodu = 5000 = Mazák)
+    { username: 'Nováček', email: 'novacek@email.cz', password: 'Novacek123', address: 'Brno, Česká 123', phone: '+420 606 111 222', points: 4950 },
+    // GURU: nastaven na 29950 bodů (po přidání návodu = 30000 = Legenda)
+    { username: 'Guru', email: 'guru@email.cz', password: 'Guru123', address: 'Praha, Hlavní 5', phone: '+420 777 888 999', points: 29950 },
+    { username: 'Pepa Všeuměl', email: 'pepa@email.cz', password: 'Pepa123', address: 'Brno, Česká 123', phone: '+420 606 123 456', points: 240 }
+];
+
+        let deleteRequests = [];
+        let levelNotifiedUsers = {};
+        let likedVideos = JSON.parse(localStorage.getItem('likedVideos')) || [];
+
+        // ============================================================
+        // 4. KATEGORIE
+        // ============================================================
+        const categories = [
+            { id: "elektro", name: "Elektro a Energie", icon: "fa-bolt", bg: "bg-amber-100 text-amber-500", border: "border-slate-100", subcategories: ["Zásuvky", "Osvětlení", "Solární panely", "Smart Home", "Spotřebiče"] },
+            { id: "vodovod", name: "Voda, Topení a Odpady", icon: "fa-droplet", bg: "bg-blue-100 text-blue-500", border: "border-slate-100", subcategories: ["Kohoutky", "Kanalizace", "Radiátory", "Závity"] },
+            { id: "domacnost", name: "Domov a Interiér", icon: "fa-house", bg: "bg-emerald-100 text-emerald-500", border: "border-slate-100", subcategories: ["Nábytek DIY", "Malování stěn", "Úklidové triky"] },
+            { id: "zahrada", name: "Zahrada a Okolí", icon: "fa-leaf", bg: "bg-green-100 text-green-500", border: "border-slate-100", subcategories: ["Trávník", "Pěstování", "Zavlažování"] },
+            { id: "auto", name: "Auto-Moto a Garáž", icon: "fa-car", bg: "bg-slate-800 text-white", border: "border-slate-100", subcategories: ["Výměna kapalin", "Pneumatiky", "Brzdy"] },
+            { id: "kemping", name: "Cestování a Outdoor", icon: "fa-compass", bg: "bg-purple-100 text-purple-500", border: "border-slate-100", subcategories: ["Kempování", "Přežití", "Výbava"] },
+            { id: "vareni", name: "Vaření a Pečení", icon: "fa-utensils", bg: "bg-rose-100 text-rose-500", border: "border-slate-100", subcategories: ["Tradiční česká", "Rychlá jídla", "Sladké"] },
+            { id: "fitness", name: "Sport, Fitness a Zdraví", icon: "fa-dumbbell", bg: "bg-orange-100 text-orange-500", border: "border-slate-100", subcategories: ["Cvičení", "Běh", "Strava"] },
+            { id: "diy", name: "Ruční práce a DIY", icon: "fa-palette", bg: "bg-violet-100 text-violet-500", border: "border-slate-100", subcategories: ["Šití", "Dřevo", "Dekorace"] },
+            { id: "zvirata", name: "Zvířata a Mazlíčci", icon: "fa-paw", bg: "bg-amber-700/10 text-amber-700", border: "border-slate-100", subcategories: ["Výcvik", "Péče", "Akvária"] },
+            { id: "it", name: "Technologie a IT", icon: "fa-laptop", bg: "bg-cyan-100 text-cyan-500", border: "border-slate-100", subcategories: ["Wi-Fi", "PC", "Záloha"] },
+            { id: "missing", name: "Chybí kategorie? Sem s tím!", icon: "fa-puzzle-piece", bg: "bg-pink-100 text-pink-500", border: "border-amber-400 border-dashed border-2", subcategories: [] }
+        ];
+
+        // ============================================================
+        // 5. VIDEÁ A KOMENTÁŘE
+        // ============================================================
+        let videos = [
+            { id: 1, title: "Oprava kapajícího kohoutku u dřezu", category: "vodovod", subcategory: "Kohoutky", author: "Mona_Kreativ", views: 120, likes: 25, text: "Základní oprava kartuše a výměna těsnění bez volání instalatéra.", tags: ["#voda", "#kohoutek", "#tesneni"], videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+            { id: 2, title: "Jak vyměnit stěrače na autě", category: "auto", subcategory: "Pneumatiky", author: "Pepa_Z_Hutí", views: 420, likes: 88, text: "Jednoduché video ukazující výměnu stěračů pro začátečníky.", tags: ["#auto", "#sterace", "#snadne"], videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+            { id: 3, title: "Nastavení bezpečné domácí Wi-Fi", category: "it", subcategory: "Wi-Fi", author: "GeekVláďa", views: 89, likes: 14, text: "Zabezpečení vaší sítě, změna hesla routeru a zprovoznění sítě pro hosty.", tags: ["#wifi", "#it", "#internet", "#bezpecnost"], videoUrl: "" },
+            { id: 4, title: "Dokonalá babiččina svíčková na smetaně", category: "vareni", subcategory: "Tradiční česká", author: "Kuchařka_Jana", views: 2310, likes: 450, text: "Tradiční recept krok za krokem včetně pasírování zeleniny.", tags: ["#svickova", "#recept", "#maso", "#cesko"], videoUrl: "" },
+            { id: 5, title: "Jak opravit zásuvku ve zdi", category: "elektro", subcategory: "Zásuvky", author: "Blesk_Franta", views: 340, likes: 29, text: "Návod jak bezpečně vyměnit prasklý kryt nebo celou zásuvku.", tags: ["#elektro", "#zasuvka", "#proud"], videoUrl: "" },
+            { id: 6, title: "Výroba zahradního stolku z palet", category: "diy", subcategory: "Dřevo", author: "Kutil_Tom", views: 512, likes: 67, text: "Přeměňte obyčejné dřevěné palety na krásný kus nábytku na terasu.", tags: ["#palety", "#diy", "#stul", "#zahrada"], videoUrl: "" },
+            { id: 7, title: "Jak správně vyčistit kávovar", category: "domacnost", subcategory: "Úklidové triky", author: "Kávomil_Patrik", views: 156, likes: 18, text: "Jak odvápnit kávovar pomocí kyseliny citronové, levně a efektivně.", tags: ["#kava", "#kavovar", "#cisteni", "#ocet"], videoUrl: "" },
+            { id: 8, title: "Výcvik štěněte: Základní povel 'Ke mně!'", category: "zvirata", subcategory: "Výcvik", author: "Dog_Trainer_Mila", views: 1045, likes: 198, text: "Naučte svého pejska spolehlivě přiběhnout na zavolání.", tags: ["#pes", "#stene", "#vycvik", "#kemne"], videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+        ];
+
+        let commentsDatabase = {
+            1: [{ author: "Kutil_Pavel", date: "před 2 hodinami", text: "Super návod! Přesně tohle mi dneska ušetřilo tisícovku." }],
+            2: [{ author: "Autofanda", date: "před 3 dny", text: "Funguje to i na zadní stěrač u Octavie?" }],
+            8: [{ author: "Pejskař_Honza", date: "před hodinou", text: "Skvělé tipy, s mým labradorem to hned začalo fungovat!" }]
+        };
+
+        let leaderboard = [
+            { name: "Legenda", points: 32000 },
+            { name: "Admin", points: 99999 },
+            { name: "Guru", points: 18000 },
+            { name: "Nováček", points: 1500 },
+            { name: "mg", points: 780 },
+            { name: "mira", points: 490 },
+            { name: "Pepa Všeuměl", points: 240 }
+        ];
+
+        let activeCategory = "vsechno";
+        let activeSubcategory = "vsechno";
+        let currentSort = "latest";
+        let currentPage = 1;
+        const itemsPerPage = 4;
+        let currentOpenedVideoId = null;
+
+        // ============================================================
+        // 6. POMOCNÉ FUNKCE
+        // ============================================================
+        function getRankNameByPoints(pts) {
+            const rank = rankDefinitions.find(r => pts >= r.min && pts <= r.max);
+            return rank ? rank.name : "Nováček";
+        }
+        function getRankByPoints(pts) {
+            return rankDefinitions.find(r => pts >= r.min && pts <= r.max);
+        }
+        function formatPoints(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        // ============================================================
+        // 7. UŽIVATELSKÉ FUNKCE
+        // ============================================================
+        function switchUser(role) {
+    currentUser.role = role;
+    if (role === 'admin') {
+        const user = usersDatabase.find(u => u.username === 'Admin');
+        currentUser.name = user ? user.username : 'Admin';
+        currentUser.points = user ? user.points : 99999;
+        currentUser.address = user ? user.address : 'Admin adresa';
+        currentUser.phone = user ? user.phone : '+420 123 456 789';
+    } else if (role === 'legenda') {
+        const user = usersDatabase.find(u => u.username === 'Legenda');
+        currentUser.name = user ? user.username : 'Legenda';
+        currentUser.points = user ? user.points : 32000;
+        currentUser.address = user ? user.address : 'Praha 1';
+        currentUser.phone = user ? user.phone : '+420 777 888 999';
+    } else if (role === 'novacek') {
+        const user = usersDatabase.find(u => u.username === 'Nováček');
+        currentUser.name = user ? user.username : 'Nováček';
+        currentUser.points = user ? user.points : 4950;
+        currentUser.address = user ? user.address : 'Brno, Česká 123';
+        currentUser.phone = user ? user.phone : '+420 606 111 222';
+    } else if (role === 'guru') {
+        const user = usersDatabase.find(u => u.username === 'Guru');
+        currentUser.name = user ? user.username : 'Guru';
+        currentUser.points = user ? user.points : 29950;
+        currentUser.address = user ? user.address : 'Praha, Hlavní 5';
+        currentUser.phone = user ? user.phone : '+420 777 888 999';
+    } else {
+        currentUser.name = 'Nepřihlášený';
+        currentUser.points = 0;
+        currentUser.address = '';
+        currentUser.phone = '';
+    }
+    updateUIForUser();
+    renderVideoFeed();
+    renderLevels();
+    renderLeaderboardPreview();
+    renderDeleteRequests();
+    if (currentOpenedVideoId) updateDetailButtons();
+    document.getElementById('header-username').textContent = currentUser.name;
+    document.getElementById('header-points').textContent = currentUser.points + ' b.';
+    document.getElementById('user-rank-badge').textContent = getRankNameByPoints(currentUser.points);
+}
+
+        function updateUIForUser() {
+            const isLoggedIn = currentUser.role !== 'neprihlaseny';
+            const isAdmin = currentUser.role === 'admin';
+            const addBtn = document.getElementById('add-content-btn');
+            if (!isLoggedIn) {
+                addBtn.innerHTML = `<i class="fa-solid fa-lock"></i> <span>Přihlas se</span>`;
+                addBtn.className = 'bg-slate-400 hover:bg-slate-400 text-white px-3 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center space-x-2 cursor-not-allowed opacity-70';
+            } else {
+                addBtn.innerHTML = `<i class="fa-solid fa-plus"></i> <span>Přidat návod</span>`;
+                addBtn.className = 'bg-amber-500 hover:bg-amber-600 text-white px-3 sm:px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center space-x-2';
+            }
+            document.getElementById('admin-panel').style.display = isAdmin ? 'block' : 'none';
+            const commentAuthor = document.getElementById('comment-author-name');
+            if (commentAuthor) commentAuthor.textContent = isLoggedIn ? currentUser.name : 'Nepřihlášený';
+                // Přepínání tlačítek Přihlásit / Odhlásit
+    const logoutBtn = document.getElementById('logout-btn');
+    const authBtn = document.querySelector('button[onclick="openModal(\'auth-modal\')"]');
+    
+    if (isLoggedIn) {
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
+        if (authBtn) authBtn.classList.add('hidden');
+    } else {
+        if (logoutBtn) logoutBtn.classList.add('hidden');
+        if (authBtn) authBtn.classList.remove('hidden');
+    }
+        }
+
+        function checkPermissionsAndOpenModal() {
+    if (currentUser.role === 'neprihlaseny') {
+        alert('🔒 Pro přidání návodu se musíš nejprve přihlásit!');
+        openModal('auth-modal');
+        return;
+    }
+    
+    // Předvyplnit textarea pokaždé, když se otevře
+    const descField = document.getElementById('form-description');
+    if (descField) descField.value = '1. \n2. \n3. ';
+    
+    // Vymazat ostatní pole (aby tam nezůstaly staré hodnoty)
+    const titleField = document.getElementById('form-title');
+    const videoField = document.getElementById('form-video-url');
+    const imageField = document.getElementById('form-image-url');
+    if (titleField) titleField.value = '';
+    if (videoField) videoField.value = '';
+    if (imageField) imageField.value = '';
+    
+    openModal('add-content-modal');
+}
+
+        function updateUserPoints(username, newPoints) {
+            const user = usersDatabase.find(u => u.username === username);
+            if (!user) return;
+            const oldRank = getRankNameByPoints(user.points);
+            user.points = newPoints;
+            const newRank = getRankNameByPoints(newPoints);
+            if (oldRank !== newRank) {
+                const key = user.username + '_' + newRank;
+                if (!levelNotifiedUsers[key]) {
+                    levelNotifiedUsers[key] = true;
+                    const reward = getRankByPoints(user.points).reward;
+
+// ✅ PŘIDÁNO: Žádost o dárek do Admin panelu
+        addGiftRequest(user.username, oldRank, newRank, reward);
+
+                    setTimeout(() => {
+    alert(`🎉 GRATULUJEME! DOSÁHL/A JSI NOVÉ ÚROVNĚ!
+
+Tvé uživatelské jméno: ${user.username}
+Tvá e-mailová adresa: ${user.email}
+
+Předchozí úroveň: ${oldRank}
+Nová úroveň: ${newRank} 🎉
+
+Tvá odměna: ${reward}
+
+📦 Dárek ti odešleme do 14 dnů od dosažení úrovně.
+⚠️ UPOZORNĚNÍ: V případě zneužití systému (spamování nevhodných návodů) si vyhrazujeme právo odebrat body a pozastavit zaslání dárku.
+
+Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
+}, 500);
+                }
+            }
+            const lbUser = leaderboard.find(u => u.name === username);
+            if (lbUser) lbUser.points = newPoints;
+            else leaderboard.push({ name: username, points: newPoints });
+            if (currentUser.name === username) {
+                currentUser.points = newPoints;
+                document.getElementById('header-points').textContent = newPoints + ' b.';
+                document.getElementById('user-rank-badge').textContent = newRank;
+            }
+        }
+
+        // ============================================================
+        // 8. REGISTRACE A PŘIHLÁŠENÍ
+        // ============================================================
+      async function handleRegister(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const address = document.getElementById('reg-address').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    
+    // Validace
+    let isValid = true;
+    if (!validateUsername(username)) { showFieldError('reg-username', 'reg-username-error'); isValid = false; } else { hideFieldError('reg-username', 'reg-username-error'); }
+    if (!validateEmail(email)) { showFieldError('reg-email', 'reg-email-error'); isValid = false; } else { hideFieldError('reg-email', 'reg-email-error'); }
+    if (!validatePassword(password)) { showFieldError('reg-password', 'reg-password-error'); isValid = false; } else { hideFieldError('reg-password', 'reg-password-error'); }
+    if (!validateAddress(address)) { showFieldError('reg-address', 'reg-address-error'); isValid = false; } else { hideFieldError('reg-address', 'reg-address-error'); }
+    if (!validatePhone(phone)) { showFieldError('reg-phone', 'reg-phone-error'); isValid = false; } else { hideFieldError('reg-phone', 'reg-phone-error'); }
+    if (!isValid) return;
+    
+    // Kontrola, jestli uživatelské jméno už neexistuje
+    const { data: existingUser } = await supabaseClient
+        .from('profiles')
+        .select('username, email')
+        .or(`username.eq.${username},email.eq.${email}`)
+        .maybeSingle();
+    
+    if (existingUser) {
+        if (existingUser.username === username) {
+            alert('❌ Uživatel s tímto jménem již existuje!');
+        } else {
+            alert('❌ Tento e-mail je již registrován!');
+        }
+        return;
+    }
+    
+    try {
+        // 1. Vytvoření uživatele v Supabase Auth
+        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+            email: email,
+            password: password
+        });
+        
+        if (authError) {
+            console.error('Chyba registrace (Auth):', authError);
+            alert('❌ Registrace se nezdařila: ' + authError.message);
+            return;
+        }
+        
+        if (!authData.user) {
+            alert('❌ Registrace se nezdařila. Zkus to znovu.');
+            return;
+        }
+        
+        // 2. Vytvoření profilu v tabulce profiles
+        const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .insert({
+                id: authData.user.id,
+                username: username,
+                email: email,
+                points: 0,
+                address: address,
+                phone: phone,
+                role: 'user'
+            });
+        
+        if (profileError) {
+            console.error('Chyba registrace (Profile):', profileError);
+            alert('❌ Registrace proběhla, ale profil se nepodařilo vytvořit.');
+            return;
+        }
+        
+        // 3. Automatické přihlášení (pokud je ověření e-mailem vypnuté)
+        if (authData.session) {
+            currentUser = {
+                id: authData.user.id,
+                name: username,
+                email: email,
+                points: 0,
+                address: address,
+                phone: phone,
+                role: 'user'
+            };
+            localStorage.setItem('vimejak_user', JSON.stringify(currentUser));
+            
+            document.getElementById('header-username').textContent = currentUser.name;
+            document.getElementById('header-points').textContent = currentUser.points + ' b.';
+            document.getElementById('user-rank-badge').textContent = getRankNameByPoints(currentUser.points);
+            
+            updateUIForUser();
+            await renderVideoFeed();
+            renderLevels();
+            await renderLeaderboardPreview();
+        }
+        
+        alert(`🎉 Registrace proběhla úspěšně!\n\nUživatel: ${username}\nEmail: ${email}\n\nVítej v komunitě VÍME JAK!`);
+        
+        // Vyčistit formulář
+        document.getElementById('reg-username').value = '';
+        document.getElementById('reg-email').value = '';
+        document.getElementById('reg-password').value = '';
+        document.getElementById('reg-address').value = '';
+        document.getElementById('reg-phone').value = '';
+        
+        closeModal('auth-modal');
+    } catch (err) {
+        console.error('Neočekávaná chyba při registraci:', err);
+        alert('❌ Neočekávaná chyba. Zkus to znovu.');
+    }
+}
+
+        async function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    
+    if (!email || !password) {
+        alert('Zadej prosím e-mail a heslo.');
+        return;
+    }
+    
+    try {
+        // 1. Přihlášení přes Supabase Auth
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+        
+        if (error) {
+            console.error('Chyba přihlášení:', error);
+            alert('❌ Přihlášení se nezdařilo: ' + error.message);
+            return;
+        }
+        
+        // 2. Načtení profilu z tabulky profiles
+        const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+        
+        if (profileError || !profile) {
+            console.error('Chyba načítání profilu:', profileError);
+            alert('❌ Přihlášení proběhlo, ale profil nebyl nalezen.');
+            await supabaseClient.auth.signOut();
+            return;
+        }
+        
+        // 3. Nastavení aktuálního uživatele
+        currentUser = {
+            id: data.user.id,
+            name: profile.username,
+            email: profile.email,
+            points: profile.points,
+            address: profile.address,
+            phone: profile.phone,
+            role: profile.role || 'user'
+        };
+        
+        // 4. Uložit do localStorage (aby session přežila F5)
+        localStorage.setItem('vimejak_user', JSON.stringify(currentUser));
+        
+        // 5. Aktualizovat UI
+        updateUIForUser();
+        await renderVideoFeed();
+        renderLevels();
+        await renderLeaderboardPreview();
+        renderDeleteRequests();
+        renderGiftRequests();
+        
+        // 6. Zavřít modal a aktualizovat hlavičku
+        closeModal('auth-modal');
+        document.getElementById('header-username').textContent = currentUser.name;
+        document.getElementById('header-points').textContent = currentUser.points + ' b.';
+        document.getElementById('user-rank-badge').textContent = getRankNameByPoints(currentUser.points);
+        
+        alert(`✅ Vítej zpět, ${currentUser.name}!`);
+        
+        // Vyčistit formulář
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+    } catch (err) {
+        console.error('Neočekávaná chyba při přihlášení:', err);
+        alert('❌ Neočekávaná chyba. Zkus to znovu.');
+    }
+}
+async function handleLogout() {
+    if (!confirm('Opravdu se chceš odhlásit?')) return;
+    
+    try {
+        await supabaseClient.auth.signOut();
+        localStorage.removeItem('vimejak_user');
+        currentUser = {
+            id: null,
+            role: 'neprihlaseny',
+            name: 'Nepřihlášený',
+            points: 0,
+            address: '',
+            phone: ''
+        };
+        updateUIForUser();
+        await renderVideoFeed();
+        renderLevels();
+        await renderLeaderboardPreview();
+        renderDeleteRequests();
+        renderGiftRequests();
+        
+        document.getElementById('header-username').textContent = 'Nepřihlášený';
+        document.getElementById('header-points').textContent = '0 b.';
+        document.getElementById('user-rank-badge').textContent = 'Nováček';
+        
+        alert('✅ Byli jste odhlášeni.');
+    } catch (err) {
+        console.error('Chyba při odhlášení:', err);
+        alert('Chyba při odhlášení.');
+    }
+}
+
+        function switchAuthTab(tab) {
+            const loginBtn = document.getElementById('tab-login-btn');
+            const registerBtn = document.getElementById('tab-register-btn');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const title = document.getElementById('auth-modal-title');
+            if (tab === 'login') {
+                loginBtn.className = 'flex-1 text-center py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition';
+                registerBtn.className = 'flex-1 text-center py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition';
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                title.textContent = 'Vítej zpět!';
+            } else {
+                registerBtn.className = 'flex-1 text-center py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition';
+                loginBtn.className = 'flex-1 text-center py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition';
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                title.textContent = 'Vytvoř si účet';
+            }
+        }
+
+        // ============================================================
+        // 9. KATEGORIE - RENDER
+        // ============================================================
+        function renderCategoriesGrid() {
+            const container = document.getElementById('categories-grid');
+            container.innerHTML = '';
+            categories.forEach(cat => {
+                const isActive = activeCategory === cat.id;
+                const card = document.createElement('button');
+                card.className = `flex flex-col items-center justify-center p-6 bg-white rounded-2xl border transition duration-200 text-center ${cat.border} ${isActive ? 'ring-2 ring-amber-500 shadow-md scale-[1.02]' : 'hover:shadow-md hover:border-slate-300'}`;
+                card.onclick = () => {
+                    if (cat.id === 'missing') {
+                        alert('Děkujeme za tip! Napiš nám na info@vimejak.cz, jaká kategorie ti schází.');
+                    } else {
+                        selectCategory(cat.id);
+                    }
+                };
+                card.innerHTML = `<div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl mb-3 ${cat.bg}"><i class="fa-solid ${cat.icon}"></i></div><span class="text-xs font-extrabold text-slate-800 leading-tight">${cat.name}</span>`;
+                container.appendChild(card);
+            });
+        }
+
+        function selectCategory(catId) {
+            if (activeCategory === catId) { activeCategory = 'vsechno'; activeSubcategory = 'vsechno'; } else { activeCategory = catId; activeSubcategory = 'vsechno'; }
+            currentPage = 1;
+            document.getElementById('reset-filter-btn').classList.toggle('hidden', activeCategory === 'vsechno');
+            renderCategoriesGrid();
+            renderSubcategoriesPanel();
+            renderVideoFeed();
+        }
+
+        function renderSubcategoriesPanel() {
+            const panel = document.getElementById('subcategories-panel');
+            const list = document.getElementById('subcategories-list');
+            if (activeCategory === 'vsechno' || activeCategory === 'missing') { panel.classList.add('hidden'); return; }
+            const activeCatObj = categories.find(c => c.id === activeCategory);
+            if (!activeCatObj || !activeCatObj.subcategories || activeCatObj.subcategories.length === 0) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+            list.innerHTML = '';
+            const allBtn = document.createElement('button');
+            allBtn.className = `px-3 py-1.5 text-xs font-bold rounded-lg transition ${activeSubcategory === 'vsechno' ? 'bg-amber-500 text-slate-950' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`;
+            allBtn.textContent = 'Vše';
+            allBtn.onclick = () => selectSubcategory('vsechno');
+            list.appendChild(allBtn);
+            activeCatObj.subcategories.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-1.5 text-xs font-bold rounded-lg transition ${activeSubcategory === sub ? 'bg-amber-500 text-slate-950' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'}`;
+                btn.textContent = sub;
+                btn.onclick = () => selectSubcategory(sub);
+                list.appendChild(btn);
+            });
+        }
+
+        function selectSubcategory(subName) {
+            activeSubcategory = subName;
+            currentPage = 1;
+            renderSubcategoriesPanel();
+            renderVideoFeed();
+        }
+
+        function resetFilters() {
+            activeCategory = 'vsechno';
+            activeSubcategory = 'vsechno';
+            currentPage = 1;
+            document.getElementById('global-search').value = '';
+            document.getElementById('reset-filter-btn').classList.add('hidden');
+            document.getElementById('subcategories-panel').classList.add('hidden');
+            renderCategoriesGrid();
+            renderVideoFeed();
+        }
+
+        function handleSearch() {
+            currentPage = 1;
+            renderVideoFeed();
+        }
+
+        // ============================================================
+        // 10. VIDEO FEED
+        // ============================================================
+        async function renderVideoFeed() {
+    const feed = document.getElementById('video-feed');
+    if (!feed) return;
+    feed.innerHTML = '<p class="text-xs text-slate-400 italic col-span-full text-center py-8">Načítám návody...</p>';
+    
+    try {
+        // Načtení všech návodů ze Supabase
+        const { data: allVideos, error } = await supabaseClient
+            .from('videos')
+            .select('*')
+            .order('id', { ascending: false });
+        
+        if (error) throw error;
+        
+        let filtered = allVideos || [];
+        
+        // Filtr podle kategorie
+        if (activeCategory !== 'vsechno') {
+            filtered = filtered.filter(v => v.category === activeCategory);
+        }
+        
+        // Filtr podle podkategorie
+        if (activeSubcategory !== 'vsechno') {
+            filtered = filtered.filter(v => v.subcategory === activeSubcategory);
+        }
+        
+        // Filtr podle vyhledávání
+        const searchVal = document.getElementById('global-search').value.toLowerCase().trim();
+        if (searchVal) {
+            filtered = filtered.filter(v => 
+                v.title.toLowerCase().includes(searchVal) || 
+                (v.text_content && v.text_content.toLowerCase().includes(searchVal)) || 
+                (v.tags && v.tags.some(t => t.toLowerCase().includes(searchVal)))
+            );
+        }
+        
+        // Řazení
+        if (currentSort === 'popular') {
+            filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+        }
+        // jinak 'latest' - už je seřazeno podle id desc ze Supabase
+        
+        // Počítadlo
+        document.getElementById('search-results-counter').textContent = `Nalezeno celkem ${filtered.length} návodů`;
+        
+        // Prázdný stav
+        if (filtered.length === 0) {
+            feed.innerHTML = `<div class="col-span-full py-12 text-center bg-white border border-slate-200/60 rounded-2xl w-full"><i class="fa-regular fa-folder-open text-slate-300 text-4xl mb-3 block"></i><p class="text-sm font-bold text-slate-500">Zde zatím žádný takový návod není.</p><p class="text-xs text-slate-400 mt-1">Zkus změnit vyhledávaný výraz nebo filtr.</p></div>`;
+            document.getElementById('pagination-controls').innerHTML = '';
+            return;
+        }
+        
+        // Stránkování
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        if (currentPage > totalPages) currentPage = totalPages || 1;
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
+        
+        // Vykreslení
+        feed.innerHTML = '';
+        paginatedItems.forEach(vid => {
+            const card = document.createElement('div');
+            card.className = 'bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition duration-200';
+            const catObj = categories.find(c => c.id === vid.category) || { name: 'Ostatní', icon: 'fa-wrench' };
+            const hasVideo = vid.video_url && vid.video_url.trim().length > 0;
+            const isLiked = likedVideos.includes(vid.id);
+            
+            card.innerHTML = `
+                <div><div class="aspect-video bg-slate-900 relative flex items-center justify-center text-white cursor-pointer" onclick="viewDetail(${vid.id})">
+                    <img src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&q=80&w=400" class="w-full h-full object-cover opacity-60" alt="Cover">
+                    <span class="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-sm text-[10px] text-white font-bold px-2 py-1 rounded-md flex items-center space-x-1"><i class="${hasVideo ? 'fa-brands fa-youtube text-red-500' : 'fa-solid fa-file-pen text-amber-500'}"></i> <span>${hasVideo ? 'VIDEO' : 'TEXT'}</span></span>
+                    <div class="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white text-lg shadow-lg hover:scale-105 transition"><i class="fa-solid ${hasVideo ? 'fa-play ml-0.5' : 'fa-file-lines'}"></i></div>
+                </div>
+                <div class="p-4 space-y-2">
+                    <div class="flex items-center space-x-1.5 text-xs text-amber-500 font-bold"><i class="fa-solid ${catObj.icon} text-[10px]"></i><span>${catObj.name} ${vid.subcategory ? '&bull; ' + vid.subcategory : ''}</span></div>
+                    <h4 class="font-extrabold text-slate-900 text-base cursor-pointer hover:text-amber-500 transition" onclick="viewDetail(${vid.id})">${vid.title}</h4>
+                    <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${vid.text_content || ''}</p>
+                    <div class="flex flex-wrap gap-1.5 pt-1">${(vid.tags || []).map(t => `<span class="bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-md font-semibold">${t}</span>`).join('')}</div>
+                </div></div>
+                <div class="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                    <span class="flex items-center space-x-1.5 font-medium"><i class="fa-regular fa-user text-[10px]"></i> <strong>${vid.author_name}</strong></span>
+                    <div class="flex items-center space-x-3">
+                        <span class="flex items-center space-x-1"><i class="fa-regular fa-eye"></i> <span>${vid.views || 0}</span></span>
+                        <button onclick="event.stopPropagation(); likeVideo(${vid.id})" class="flex items-center space-x-1 ${isLiked ? 'text-rose-500 font-bold' : 'hover:text-rose-500'} transition"><i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i> <span>${vid.likes || 0}</span></button>
+                    </div>
+                </div>
+            `;
+            feed.appendChild(card);
+        });
+        
+        renderPaginationControls(totalPages);
+    } catch (err) {
+        console.error('Chyba při načítání návodů:', err);
+        feed.innerHTML = '<p class="text-xs text-red-500 italic col-span-full text-center py-8">Chyba při načítání návodů.</p>';
+    }
+}
+
+        function renderPaginationControls(totalPages) {
+            const container = document.getElementById('pagination-controls');
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+            const prevBtn = document.createElement('button');
+            prevBtn.className = `flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${currentPage === 1 ? 'text-slate-300 border-slate-100 cursor-not-allowed' : 'text-slate-700 border-slate-200 hover:bg-slate-50'}`;
+            prevBtn.innerHTML = `<i class="fa-solid fa-arrow-left"></i> Předchozí`;
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderVideoFeed(); scrollToFeed(); } };
+            container.appendChild(prevBtn);
+            const pagesContainer = document.createElement('div');
+            pagesContainer.className = 'flex items-center gap-1';
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `w-8 h-8 rounded-lg text-xs font-bold transition ${i === currentPage ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => { currentPage = i; renderVideoFeed(); scrollToFeed(); };
+                pagesContainer.appendChild(pageBtn);
+            }
+            container.appendChild(pagesContainer);
+            const nextBtn = document.createElement('button');
+            nextBtn.className = `flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition ${currentPage === totalPages ? 'text-slate-300 border-slate-100 cursor-not-allowed' : 'text-slate-700 border-slate-200 hover:bg-slate-50'}`;
+            nextBtn.innerHTML = `Další <i class="fa-solid fa-arrow-right"></i>`;
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderVideoFeed(); scrollToFeed(); } };
+            container.appendChild(nextBtn);
+        }
+
+        function scrollToFeed() {
+            document.getElementById('feed-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function sortFeed(type) {
+            currentSort = type;
+            currentPage = 1;
+            document.getElementById('sort-latest').className = type === 'latest' ? 'text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-950 text-white transition' : 'text-xs font-bold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition';
+            document.getElementById('sort-popular').className = type === 'popular' ? 'text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-950 text-white transition' : 'text-xs font-bold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition';
+            renderVideoFeed();
+        }
+
+        // ============================================================
+        // 11. LAJKOVÁNÍ
+        // ============================================================
+        
+async function likeVideo(id) {
+    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
+    // Až budeme mít skutečné přihlašování, změníme na skutečného uživatele
+    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
+    const TEMP_USERNAME = 'Admin';
+    
+    try {
+        // 1. Zkontroluj, jestli už tento uživatel lajknul
+        const { data: existingLike, error: checkError } = await supabaseClient
+            .from('likes')
+            .select('id')
+            .eq('video_id', id)
+            .eq('user_id', TEMP_USER_ID)
+            .maybeSingle();
+        
+        if (checkError) throw checkError;
+        
+        if (existingLike) {
+            alert('Tento návod už jsi jednou ocenil(a)!');
+            return;
+        }
+        
+        // 2. Vlož lajk do tabulky likes
+        const { error: insertError } = await supabaseClient
+            .from('likes')
+            .insert({ video_id: id, user_id: TEMP_USER_ID });
+        
+        if (insertError) throw insertError;
+        
+        // 3. Zvýšit počet lajků u videa
+        const { data: video, error: fetchError } = await supabaseClient
+            .from('videos')
+            .select('likes')
+            .eq('id', id)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        const newLikesCount = (video.likes || 0) + 1;
+        
+        await supabaseClient
+            .from('videos')
+            .update({ likes: newLikesCount })
+            .eq('id', id);
+        
+        // 4. Aktualizovat lokální pole likedVideos (pro UI)
+        if (!likedVideos.includes(id)) {
+            likedVideos.push(id);
+            localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
+        }
+        
+        // 5. Aktualizovat UI
+        renderVideoFeed();
+        if (currentOpenedVideoId === id) {
+            document.getElementById('detail-likes-count').textContent = newLikesCount;
+            updateLikeButtonState(true);
+        }
+    } catch (err) {
+        console.error('Chyba při lajkování:', err);
+        alert('Chyba při lajkování. Zkus to znovu.');
+    }
+}
+        function updateLikeButtonState(isLiked) {
+            const likeBtn = document.getElementById('detail-like-btn');
+            if (!likeBtn) return;
+            const targetVideo = videos.find(v => v.id === currentOpenedVideoId);
+            const currentLikesCount = targetVideo ? targetVideo.likes : 0;
+            if (currentUser.role === 'neprihlaseny') {
+                likeBtn.className = 'flex-1 bg-slate-100 border border-slate-200 text-slate-400 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-not-allowed opacity-60';
+                likeBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Přihlas se`;
+                likeBtn.onclick = () => { alert('🔒 Pro lajkování se musíš přihlásit!'); openModal('auth-modal'); };
+                return;
+            }
+            if (isLiked) {
+                likeBtn.className = 'flex-1 bg-rose-50 border border-rose-200 text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-not-allowed';
+                likeBtn.innerHTML = `<i class="fa-solid fa-heart"></i> Již lajknuto (<span id="detail-likes-count">${currentLikesCount}</span>)`;
+                likeBtn.onclick = null;
+            } else {
+                likeBtn.className = 'flex-1 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2';
+                likeBtn.innerHTML = `<i class="fa-regular fa-heart"></i> Poděkovat lajkem (<span id="detail-likes-count">${currentLikesCount}</span>)`;
+                likeBtn.onclick = () => likeVideo(currentOpenedVideoId);
+            }
+        }
+
+        // ============================================================
+        // 12. DETAIL VIDEA
+        // ============================================================
+       function getEmbedUrl(url) {
+    if (!url) return null;
+    
+    // 1. YouTube watch URL (s parametry)
+    // https://www.youtube.com/watch?v=27wjptNr63g&pp=...
+    let match = url.match(/[?&]v=([^&#]+)/);
+    if (match && match[1]) {
+        return 'https://www.youtube.com/embed/' + match[1];
+    }
+    
+    // 2. Krátký odkaz youtu.be
+    match = url.match(/youtu\.be\/([^?#]+)/);
+    if (match && match[1]) {
+        return 'https://www.youtube.com/embed/' + match[1];
+    }
+    
+    // 3. YouTube Shorts
+    match = url.match(/youtube\.com\/shorts\/([^?#]+)/);
+    if (match && match[1]) {
+        return 'https://www.youtube.com/embed/' + match[1];
+    }
+    
+    // 4. Embed URL (už je ve správném formátu)
+    match = url.match(/youtube\.com\/embed\/([^?#]+)/);
+    if (match && match[1]) {
+        return 'https://www.youtube.com/embed/' + match[1];
+    }
+    
+    return null;
+}
+async function viewDetail(id) {
+    try {
+        // Načtení videa ze Supabase
+        const { data, error } = await supabaseClient
+            .from('videos')
+            .select('*')
+            .eq('id', id)
+            .single();
+        
+        if (error || !data) {
+            alert('Návod nebyl nalezen.');
+            return;
+        }
+        
+        const vid = data;
+        currentOpenedVideoId = id;
+        
+        // Zvýšení počítadla zobrazení (na pozadí)
+        supabaseClient
+            .from('videos')
+            .update({ views: (vid.views || 0) + 1 })
+            .eq('id', id)
+            .then(() => {}); // bez await, jen na pozadí
+        
+        // Aktualizace seznamu (aby se zvýšilo počítadlo v kartě)
+        renderVideoFeed();
+        
+        // Naplnění detailu
+        const catObj = categories.find(c => c.id === vid.category) || { name: 'Ostatní', icon: 'fa-wrench' };
+        document.getElementById('detail-category').innerHTML = `<i class="fa-solid ${catObj.icon}"></i> <span>${catObj.name} ${vid.subcategory ? '&bull; ' + vid.subcategory : ''}</span>`;
+        document.getElementById('detail-title').textContent = vid.title;
+        document.getElementById('detail-author').textContent = vid.author_name;
+        document.getElementById('detail-views').textContent = (vid.views || 0) + 1;
+        document.getElementById('detail-text').textContent = vid.text_content || '';
+        
+        // Zobrazení videa nebo fotek
+        const videoContainer = document.getElementById('video-container');
+        const imageContainer = document.getElementById('detail-image-container');
+        const embedUrl = getEmbedUrl(vid.video_url);
+        
+        if (embedUrl) {
+            // Má video → zobraz video
+            videoContainer.innerHTML = `<iframe class="w-full h-full" src="${embedUrl}?autoplay=1" title="Víme Jak Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+            videoContainer.classList.remove('hidden');
+            if (imageContainer) imageContainer.classList.add('hidden');
+        } else if (vid.image_urls && vid.image_urls.length > 0) {
+            // Nemá video, ale má fotky → zobraz fotky
+            videoContainer.innerHTML = '';
+            videoContainer.classList.add('hidden');
+            
+            const count = vid.image_urls.length;
+            let gridClass = 'grid-cols-1';
+            
+            if (count === 1) gridClass = 'grid-cols-1';
+            else if (count === 2) gridClass = 'grid-cols-2';
+            else if (count === 3) gridClass = 'grid-cols-2';
+            else if (count === 4) gridClass = 'grid-cols-2';
+            else if (count <= 6) gridClass = 'grid-cols-3';
+            else if (count <= 9) gridClass = 'grid-cols-3';
+            else gridClass = 'grid-cols-3 md:grid-cols-4';
+            
+            imageContainer.innerHTML = `
+                <div class="grid ${gridClass} gap-3 w-full h-full content-start auto-rows-fr">
+                    ${vid.image_urls.map(url => `
+                        <img src="${url}" alt="${vid.title}" class="w-full h-full object-cover rounded-xl border border-slate-700 cursor-pointer hover:scale-105 transition" onclick="window.open('${url}', '_blank')" onerror="this.style.display='none'">
+                    `).join('')}
+                </div>
+            `;
+            imageContainer.classList.remove('hidden');
+        } else {
+            // Nemá video ani fotky → zobraz text
+            videoContainer.innerHTML = `<div class="w-full h-full flex flex-col items-center justify-center text-slate-400 p-6 text-center select-none bg-slate-950"><i class="fa-solid fa-file-invoice text-5xl text-amber-500 mb-4 animate-pulse"></i><h4 class="text-white font-black text-base">Kompletní textový návod</h4><p class="text-xs text-slate-500 max-w-xs mt-1">Autor k tomuto návodu nepřipojil video. Celý postup si přečti v pravém panelu.</p></div>`;
+            videoContainer.classList.remove('hidden');
+            if (imageContainer) imageContainer.classList.add('hidden');
+        }
+        
+        updateLikeButtonState(likedVideos.includes(id));
+        updateDetailButtons();
+        renderComments(id);
+        openModal('detail-modal');
+    } catch (err) {
+        console.error('Chyba při načítání detailu:', err);
+        alert('Chyba při načítání návodu.');
+    }
+}
+   
+        function updateDetailButtons() {
+    const deleteReqBtn = document.getElementById('detail-delete-request-btn');
+    // ✅ ZMĚNA: Kontroluje úroveň "Legenda" podle bodů, ne podle role
+    const userRank = getRankNameByPoints(currentUser.points);
+    if (userRank === 'Legenda') { 
+        deleteReqBtn.classList.remove('hidden'); 
+        deleteReqBtn.style.display = 'flex'; 
+    } else { 
+        deleteReqBtn.classList.add('hidden'); 
+        deleteReqBtn.style.display = 'none'; 
+    }
+    const commentInput = document.getElementById('comment-input');
+    const commentSubmit = document.querySelector('#comment-form button[type="submit"]');
+    if (currentUser.role === 'neprihlaseny') {
+        commentInput.disabled = true;
+        commentInput.placeholder = '🔒 Pro přidání komentáře se přihlas';
+        commentInput.className = 'w-full border border-slate-200 rounded-xl p-3 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-100 text-xs text-slate-400 placeholder-slate-400 cursor-not-allowed';
+        commentSubmit.disabled = true;
+        commentSubmit.className = 'bg-slate-400 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm cursor-not-allowed';
+    } else {
+        commentInput.disabled = false;
+        commentInput.placeholder = 'Máš dotaz, nebo víš jak to udělat líp? Porad ostatním...';
+        commentInput.className = 'w-full border border-slate-200 rounded-xl p-3 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-xs text-slate-800 placeholder-slate-400';
+        commentSubmit.disabled = false;
+        commentSubmit.className = 'bg-amber-500 hover:bg-amber-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm';
+    }
+}
+
+        async function renderComments(videoId) {
+    const list = document.getElementById('comments-list');
+    if (!list) return;
+    list.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Načítám komentáře...</p>';
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('comments')
+            .select('*')
+            .eq('video_id', videoId)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const comments = data || [];
+        document.getElementById('detail-comments-count').textContent = comments.length;
+        
+        if (comments.length === 0) {
+            list.innerHTML = `<p class="text-xs text-slate-400 italic text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200">K tomuto návodu zatím nikdo nenapsal žádný dotaz. Buď první!</p>`;
+            return;
+        }
+        
+        list.innerHTML = comments.map(c => `
+            <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-extrabold text-slate-800">${c.author_name}</span>
+                    <span class="text-slate-400">${formatCommentDate(c.created_at)}</span>
+                </div>
+                <p class="text-slate-600 text-xs leading-relaxed">${c.text_content}</p>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Chyba při načítání komentářů:', err);
+        list.innerHTML = '<p class="text-xs text-red-500 italic text-center py-4">Chyba při načítání komentářů.</p>';
+    }
+}
+
+function formatCommentDate(isoString) {
+    if (!isoString) return 'právě teď';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHour = Math.floor(diffMs / 3600000);
+    const diffDay = Math.floor(diffMs / 86400000);
+    
+    if (diffMin < 1) return 'právě teď';
+    if (diffMin < 60) return `před ${diffMin} min`;
+    if (diffHour < 24) return `před ${diffHour} h`;
+    if (diffDay < 7) return `před ${diffDay} dny`;
+    return date.toLocaleDateString('cs-CZ');
+}
+
+       async function addNewComment(event) {
+    event.preventDefault();
+    
+    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
+    // Až budeme mít skutečné přihlašování, změníme na skutečného uživatele
+    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
+    const TEMP_USERNAME = 'Admin';
+    
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    
+    if (!text || !currentOpenedVideoId) return;
+    
+    try {
+        const { error } = await supabaseClient
+            .from('comments')
+            .insert({
+                video_id: currentOpenedVideoId,
+                author_id: TEMP_USER_ID,
+                author_name: TEMP_USERNAME,
+                text_content: text
+            });
+        
+        if (error) throw error;
+        
+        // Vymaž pole a znovu načti komentáře
+        input.value = '';
+        renderComments(currentOpenedVideoId);
+    } catch (err) {
+        console.error('Chyba při přidávání komentáře:', err);
+        alert('Chyba při odesílání komentáře. Zkus to znovu.');
+    }
+}
+
+        // ============================================================
+        // 13. HLÁŠENÍ SMAZÁNÍ A ADMIN
+        // ============================================================
+        async function requestDelete() {
+    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
+    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
+    const TEMP_USERNAME = 'Admin';
+    
+    // Kontrola úrovně Legenda
+    const userRank = getRankNameByPoints(currentUser.points);
+    if (userRank !== 'Legenda') {
+        alert('⚠️ Tuto funkci může používat pouze uživatel na úrovni LEGENDA (30 000+ bodů)!');
+        return;
+    }
+    
+    if (!currentOpenedVideoId) return;
+    
+    try {
+        // 1. Zkontroluj, jestli uživatel už nepožádal o smazání
+        const { data: existing } = await supabaseClient
+            .from('delete_requests')
+            .select('id')
+            .eq('video_id', currentOpenedVideoId)
+            .eq('requested_by_id', TEMP_USER_ID)
+            .eq('status', 'pending')
+            .maybeSingle();
+        
+        if (existing) {
+            alert('⏳ Již jsi poslal(a) požadavek na smazání tohoto videa.');
+            return;
+        }
+        
+        // 2. Načti název videa
+        const { data: video, error: videoError } = await supabaseClient
+            .from('videos')
+            .select('title')
+            .eq('id', currentOpenedVideoId)
+            .single();
+        
+        if (videoError || !video) {
+            alert('Návod nebyl nalezen.');
+            return;
+        }
+        
+        // 3. Zjisti důvod
+        const reason = prompt('📝 Prosím napiš důvod, proč chceš toto video smazat:');
+        if (!reason) return;
+        
+        // 4. Vlož žádost do Supabase
+        const { error: insertError } = await supabaseClient
+            .from('delete_requests')
+            .insert({
+                video_id: currentOpenedVideoId,
+                video_title: video.title,
+                reason: reason,
+                status: 'pending',
+                requested_by_id: TEMP_USER_ID,
+                requested_by_name: TEMP_USERNAME
+            });
+        
+        if (insertError) throw insertError;
+        
+        alert('✅ Požadavek na smazání byl odeslán Adminovi.');
+        await renderDeleteRequests();
+    } catch (err) {
+        console.error('Chyba při odesílání žádosti:', err);
+        alert('Chyba při odesílání žádosti. Zkus to znovu.');
+    }
+}
+
+async function renderDeleteRequests() {
+    const container = document.getElementById('delete-requests-list');
+    const countBadge = document.getElementById('delete-requests-count');
+    if (!container || !countBadge) return;
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('delete_requests')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const pending = data || [];
+        countBadge.textContent = pending.length;
+        
+        // Pokud není admin, schováme seznam
+        if (currentUser.role !== 'admin') {
+            container.innerHTML = `<p class="text-xs text-slate-400 italic">Pouze admin vidí požadavky.</p>`;
+            return;
+        }
+        
+        if (pending.length === 0) {
+            container.innerHTML = `<p class="text-xs text-slate-400 italic">Žádné nové požadavky.</p>`;
+            return;
+        }
+        
+        container.innerHTML = pending.map(req => `
+            <div class="flex items-center justify-between p-2 bg-amber-50 border border-amber-200 rounded-xl text-xs">
+                <div class="flex-1 truncate">
+                    <span class="font-bold text-slate-800">${req.video_title}</span>
+                    <span class="text-slate-500 block truncate">${req.reason || ''}</span>
+                    <span class="text-slate-400 block truncate text-[10px]">Nahlásil: ${req.requested_by_name}</span>
+                </div>
+                <div class="flex space-x-1 shrink-0 ml-2">
+                    <button onclick="approveDelete(${req.id}, ${req.video_id})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">✓</button>
+                    <button onclick="rejectDelete(${req.id})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">✗</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Chyba při načítání žádostí:', err);
+        container.innerHTML = '<p class="text-xs text-red-500 italic">Chyba při načítání žádostí.</p>';
+    }
+}
+        async function approveDelete(requestId, videoId) {
+    if (currentUser.role !== 'admin') return;
+    
+    try {
+        // 1. Načti žádost
+        const { data: req, error: fetchError } = await supabaseClient
+            .from('delete_requests')
+            .select('*')
+            .eq('id', requestId)
+            .eq('status', 'pending')
+            .single();
+        
+        if (fetchError || !req) {
+            alert('Žádost nenalezena.');
+            return;
+        }
+        
+        // 2. Načti video a zjisti body k odečtení
+        const { data: video } = await supabaseClient
+            .from('videos')
+            .select('*')
+            .eq('id', videoId)
+            .single();
+        
+        if (video) {
+            const isVideo = video.video_url && video.video_url.trim().length > 0;
+            const pointsToDeduct = isVideo ? 20 : 50;
+            
+            // 3. Odečti body autorovi
+            const { data: author } = await supabaseClient
+                .from('profiles')
+                .select('id, points, username')
+                .eq('id', video.author_id)
+                .single();
+            
+            if (author) {
+                const newPoints = Math.max(0, (author.points || 0) - pointsToDeduct);
+                await supabaseClient
+                    .from('profiles')
+                    .update({ points: newPoints })
+                    .eq('id', author.id);
+                
+                alert(`📌 NÁVOD BYL SMAZÁN!
+
+Autor: ${author.username}
+Název: "${video.title}"
+Důvod: ${req.reason || 'neuveden'}
+
+Odečteno ${pointsToDeduct} bodů.
+Aktuální skóre: ${newPoints} bodů.`);
+            }
+            
+            // 4. Smaž video (kaskádou se smažou i komentáře, lajky a žádosti)
+            await supabaseClient
+                .from('videos')
+                .delete()
+                .eq('id', videoId);
+        }
+        
+        // 5. Aktualizuj status žádosti
+        await supabaseClient
+            .from('delete_requests')
+            .update({ status: 'approved' })
+            .eq('id', requestId);
+        
+        await renderDeleteRequests();
+        await renderAdminRequestsFull();
+        await renderVideoFeed();
+        await renderLeaderboardPreview();
+        if (currentOpenedVideoId === videoId) closeModal('detail-modal');
+    } catch (err) {
+        console.error('Chyba při schvalování smazání:', err);
+        alert('Chyba při schvalování smazání.');
+    }
+}
+
+async function rejectDelete(requestId) {
+    if (currentUser.role !== 'admin') return;
+    
+    try {
+        await supabaseClient
+            .from('delete_requests')
+            .update({ status: 'rejected' })
+            .eq('id', requestId);
+        
+        await renderDeleteRequests();
+        await renderAdminRequestsFull();
+    } catch (err) {
+        console.error('Chyba při zamítnutí žádosti:', err);
+        alert('Chyba při zamítnutí žádosti.');
+    }
+}
+        async function renderAdminRequestsFull() {
+    const container = document.getElementById('admin-requests-full-list');
+    if (!container) return;
+    
+    if (currentUser.role !== 'admin') {
+        container.innerHTML = '<p class="text-sm text-slate-500">Přístup odepřen.</p>';
+        return;
+    }
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('delete_requests')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="text-sm text-slate-400 italic">Zatím žádné požadavky.</p>';
+            return;
+        }
+        
+        // Pro každou žádost načteme i informace o videu
+        const requestsWithVideos = await Promise.all(data.map(async (req) => {
+            const { data: video } = await supabaseClient
+                .from('videos')
+                .select('*')
+                .eq('id', req.video_id)
+                .maybeSingle();
+            return { ...req, video: video };
+        }));
+        
+        container.innerHTML = requestsWithVideos.map(req => {
+            const video = req.video;
+            const videoExists = video !== undefined && video !== null;
+            const hasVideo = videoExists && video.video_url && video.video_url.trim().length > 0;
+            const embedUrl = hasVideo ? getEmbedUrl(video.video_url) : null;
+            
+            return `
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-amber-100 text-amber-700' : req.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                            ${req.status === 'pending' ? '⏳ Čeká na schválení' : req.status === 'approved' ? '✅ Schváleno' : '❌ Zamítnuto'}
+                        </span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-slate-700">Nahlásil: ${req.requested_by_name}</span>
+                        <span class="text-[10px] text-slate-400 block">📅 ${new Date(req.created_at).toLocaleString('cs-CZ')}</span>
+                    </div>
+                </div>
+                
+                ${videoExists ? `
+                <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+                    ${embedUrl ? `
+                        <div class="aspect-video bg-black">
+                            <iframe class="w-full h-full" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    ` : `
+                        <div class="aspect-video bg-slate-800 flex flex-col items-center justify-center text-slate-400 p-6 text-center select-none">
+                            <i class="fa-solid fa-file-invoice text-5xl text-amber-500 mb-4"></i>
+                            <h4 class="text-white font-black text-base">Textový návod</h4>
+                        </div>
+                    `}
+                    <div class="p-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-amber-600">📌 Název:</span>
+                            <span class="text-sm font-bold text-slate-900">${video.title}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-amber-600">👤 Autor:</span>
+                            <span class="text-sm text-slate-700">${video.author_name}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-amber-600">📂 Kategorie:</span>
+                            <span class="text-sm text-slate-700">${video.category}</span>
+                        </div>
+                    </div>
+                </div>
+                ` : `
+                <div class="bg-white border border-slate-200 rounded-xl p-4">
+                    <span class="text-sm font-bold text-slate-900 line-through text-red-500">${req.video_title}</span>
+                    <span class="text-[10px] text-red-500 font-bold block">(VIDEO BYLO SMÁZÁNO)</span>
+                </div>
+                `}
+                
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <span class="text-xs font-bold text-amber-700">📝 Důvod:</span>
+                    <p class="text-xs text-slate-700 mt-1">${req.reason || 'Nebyl uveden.'}</p>
+                </div>
+                
+                ${req.status === 'pending' ? `
+                    <div class="flex gap-2 pt-2 border-t border-slate-200">
+                        <button onclick="approveDelete(${req.id}, ${req.video_id})" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition">✅ Schválit</button>
+                        <button onclick="rejectDelete(${req.id})" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition">❌ Zamítnout</button>
+                    </div>
+                ` : ''}
+                ${req.status === 'approved' ? '<p class="text-xs text-green-600">✅ Schváleno</p>' : ''}
+                ${req.status === 'rejected' ? '<p class="text-xs text-red-600">❌ Zamítnuto</p>' : ''}
+            </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Chyba při načítání žádostí:', err);
+        container.innerHTML = '<p class="text-sm text-red-500 italic">Chyba při načítání žádostí.</p>';
+    }
+}
+
+        // ============================================================
+        // 14. LEVELS, LEADERBOARD, PROFIL
+        // ============================================================
+        function renderLevels() {
+            const container = document.getElementById('levels-list');
+            container.innerHTML = '';
+            const userPoints = currentUser.points;
+            rankDefinitions.forEach(rank => {
+                const isCurrent = getRankNameByPoints(userPoints) === rank.name;
+                const rangeText = rank.max === Infinity ? '30 000+ bodů' : `${formatPoints(rank.min)}–${formatPoints(rank.max)} bodů`;
+                const card = document.createElement('div');
+                card.className = `flex items-center p-3 rounded-2xl border bg-[#fcfdfe] relative ${rank.borderStyle} ${isCurrent ? 'ring-2 ring-amber-500/20 shadow-sm' : 'border-slate-100 hover:border-slate-200 shadow-sm'}`;
+                card.innerHTML = `
+                    <div class="bg-slate-100 w-11 h-11 rounded-full flex items-center justify-center shrink-0 mr-4"><i class="fa-solid ${rank.icon} ${rank.iconColor} text-base"></i></div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between"><span class="font-extrabold text-slate-800 text-sm">${rank.name}</span>${isCurrent ? `<span class="bg-amber-500/10 text-amber-600 text-[9px] px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Tvoje úroveň</span>` : ''}</div>
+                        <span class="block text-[11px] text-slate-400 font-medium">${rangeText}</span>
+                        <span class="block text-xs text-amber-500 font-bold mt-0.5">🎁 ${rank.reward}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+async function renderLeaderboardPreview() {
+    const container = document.getElementById('leaderboard-preview');
+    if (!container) return;
+    container.innerHTML = '<p class="text-xs text-slate-400 italic">Načítám žebříček...</p>';
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('profiles')
+.select('username, points, role')
+.neq('role', 'admin')
+.order('points', { ascending: false })
+.limit(5);
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic">Zatím žádní uživatelé.</p>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        data.forEach((user, idx) => {
+            let rankName = getRankNameByPoints(user.points);
+let rankDef = rankDefinitions.find(r => r.name === rankName);
+
+// Pokud je uživatel admin, přepíšeme badge
+if (user.role === 'admin') {
+    rankName = 'Admin';
+    rankDef = { badgeColor: 'bg-slate-900 text-white border-slate-800' };
+}
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between py-2 border-b border-slate-50 last:border-0';
+            item.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="w-6 h-6 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-xs font-black shrink-0">${idx + 1}</div>
+                    <div><span class="font-bold text-slate-800 text-xs block">${user.username}</span><span class="text-[10px] text-slate-400 font-semibold"><i class="fa-solid fa-trophy text-amber-500 text-[8px]"></i> ${formatPoints(user.points)} bodů</span></div>
+                </div>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded-full border ${rankDef ? rankDef.badgeColor : 'bg-slate-100'}">${rankName}</span>
+            `;
+            container.appendChild(item);
+        });
+    } catch (err) {
+        console.error('Chyba při načítání žebříčku:', err);
+        container.innerHTML = '<p class="text-xs text-red-500 italic">Chyba při načítání žebříčku.</p>';
+    }
+}
+        
+async function renderFullLeaderboard(query = '') {
+    const container = document.getElementById('full-leaderboard-list');
+    if (!container) return;
+    container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Načítám žebříček...</p>';
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('profiles')
+            .select('username, points, role')
+            .neq('role', 'admin')
+            .order('points', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Zatím žádní uživatelé.</p>';
+            return;
+        }
+        
+        let filtered = data;
+        if (query) {
+            filtered = data.filter(u => u.username.toLowerCase().includes(query));
+        }
+        
+        if (filtered.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-4">Nikdo takový nenalezen.</p>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        filtered.forEach((user, idx) => {
+            let rankName = getRankNameByPoints(user.points);
+            let rankDef = rankDefinitions.find(r => r.name === rankName);
+            
+            if (user.role === 'admin') {
+                rankName = 'Admin';
+                rankDef = { badgeColor: 'bg-slate-900 text-white border-slate-800' };
+            }
+            
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100';
+            item.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-extrabold text-slate-400 w-5 text-center">${idx + 1}.</span>
+                    <div><span class="font-bold text-slate-800 text-sm block">${user.username}</span><span class="text-xs text-slate-400 font-semibold">${formatPoints(user.points)} bodů</span></div>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-full border ${rankDef ? rankDef.badgeColor : 'bg-slate-100'}">${rankName}</span>
+            `;
+            container.appendChild(item);
+        });
+    } catch (err) {
+        console.error('Chyba při načítání žebříčku:', err);
+        container.innerHTML = '<p class="text-xs text-red-500 italic text-center py-4">Chyba při načítání žebříčku.</p>';
+    }
+}
+        
+
+        function filterLeaderboard() {
+    const query = document.getElementById('leaderboard-search').value.toLowerCase().trim();
+    renderFullLeaderboard(query);
+}
+
+        function openProfileModal() {
+            const pts = currentUser.points;
+            document.getElementById('profile-username').textContent = currentUser.name;
+            document.getElementById('profile-points').textContent = pts;
+            const userVideos = videos.filter(v => v.author === currentUser.name);
+            document.getElementById('profile-videos-count').textContent = userVideos.length;
+            const currentRank = getRankByPoints(pts);
+            document.getElementById('profile-rank-tag').textContent = currentRank ? currentRank.name : 'Nováček';
+            const rewardsContainer = document.getElementById('profile-rewards');
+            if (currentRank) {
+                const allRanks = rankDefinitions.filter(r => r.max <= pts || (r.max === Infinity && pts >= r.min));
+                if (allRanks.length > 0) {
+                    rewardsContainer.innerHTML = allRanks.map(r => `<div class="flex items-center gap-2 py-0.5"><span class="text-amber-500"><i class="fa-solid fa-check-circle"></i></span><span><strong>${r.name}:</strong> ${r.reward}</span></div>`).join('');
+                } else {
+                    rewardsContainer.innerHTML = `<span class="text-slate-400">Zatím žádné odměny. Pokračuj v aktivitě!</span>`;
+                }
+            }
+            const nextRank = rankDefinitions.find(r => r.min > pts);
+            const progressText = document.getElementById('profile-progress-text');
+            const progressBar = document.getElementById('profile-progress-bar');
+            if (nextRank) {
+                const prevRank = rankDefinitions.find(r => r.max < pts) || rankDefinitions[0];
+                const pointsNeeded = nextRank.min - pts;
+                progressText.innerHTML = `<span class="text-amber-500">${formatPoints(pointsNeeded)} b.</span> do úrovně <strong class="text-slate-900">${nextRank.name}</strong>`;
+                const range = nextRank.min - prevRank.min;
+                const progressInsideRange = pts - prevRank.min;
+                const percentage = Math.min(100, Math.max(0, (progressInsideRange / range) * 100));
+                progressBar.style.width = `${percentage}%`;
+            } else {
+                progressText.innerHTML = `<span class="text-amber-500 font-bold">Dosáhl jsi vrcholu! 👑</span>`;
+                progressBar.style.width = '100%';
+            }
+            openModal('profile-modal');
+        }
+
+        // ============================================================
+        // 15. MODÁLY A POMOCNÉ
+        // ============================================================
+        function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+    document.getElementById(id).classList.add('flex');
+    if (id === 'admin-requests-modal') renderAdminRequestsFull();
+    if (id === 'gift-requests-modal') renderGiftRequestsFull();
+    if (id === 'all-leaderboard-modal') renderFullLeaderboard();
+}
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('flex');
+            document.getElementById(id).classList.add('hidden');
+            if (id === 'detail-modal') { document.getElementById('video-container').innerHTML = ''; currentOpenedVideoId = null; }
+        }
+
+        window.onclick = function(event) {
+    ['auth-modal', 'all-leaderboard-modal', 'profile-modal', 'add-content-modal', 'detail-modal', 'admin-requests-modal', 'gift-requests-modal'].forEach(id => {
+        if (event.target === document.getElementById(id)) closeModal(id);
+    });
+}
+
+        function toggleHelp() {
+            const content = document.getElementById('help-content');
+            const chevron = document.getElementById('help-chevron');
+            content.classList.toggle('hidden');
+            chevron.classList.toggle('rotate-180');
+        }
+
+        function populateFormCategories() {
+            const select = document.getElementById('form-category');
+            select.innerHTML = '';
+            categories.slice(0, 11).forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.textContent = cat.name;
+                select.appendChild(opt);
+            });
+        }
+
+        // ============================================================
+// PŘIDÁNÍ DALŠÍHO POLE PRO FOTKU
+// ============================================================
+function addImageField() {
+    const container = document.getElementById('image-fields-container');
+    if (!container) return;
+    
+    const count = container.querySelectorAll('input').length + 1;
+    const newField = document.createElement('input');
+    newField.type = 'text';
+    newField.id = 'form-image-url-' + count;
+    newField.placeholder = 'Odkaz na ' + count + '. fotku (https://...)';
+    newField.className = 'w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs';
+    container.appendChild(newField);
+}
+
+async function submitContent() {
+    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
+    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
+    const TEMP_USERNAME = 'Admin';
+    
+    const title = document.getElementById('form-title').value.trim();
+    const cat = document.getElementById('form-category').value;
+    const videoUrl = document.getElementById('form-video-url').value.trim();
+    const desc = document.getElementById('form-description').value.trim();
+    
+    const isVideo = videoUrl.length > 0;
+    if (!title) { alert('Prosím vyplňte název návodu.'); return; }
+    
+    if (!isVideo) {
+        if (!desc) { alert('U textového návodu je povinný popis.'); return; }
+        const steps = desc.split('\n').map(l => l.trim()).filter(l => /^\d+\./.test(l));
+        if (steps.length < 3) {
+            alert('Textový návod musí mít alespoň 3 kroky (1., 2., 3.).');
+            return;
+        }
+        const emptySteps = steps.filter(step => step.replace(/^\d+\./, '').trim().length < 3);
+        if (emptySteps.length > 0) {
+            alert('Každý krok musí obsahovat text (např. "1. Vypni vodu").');
+            return;
+        }
+    }
+    
+    const pointsEarned = isVideo ? 20 : 50;
+    
+    // Načtení obrázků ze VŠECH polí
+    const imageUrls = [];
+    const container = document.getElementById('image-fields-container');
+    if (container) {
+        const fields = container.querySelectorAll('input');
+        fields.forEach(field => {
+            const url = field.value.trim();
+            if (url.length > 0) imageUrls.push(url);
+        });
+    }
+    
+    try {
+        // 1. Vložit návod do Supabase
+        const { error: insertError } = await supabaseClient
+            .from('videos')
+            .insert({
+                title: title,
+                category: cat,
+                subcategory: 'Obecné',
+                author_id: TEMP_USER_ID,
+                author_name: TEMP_USERNAME,
+                views: 0,
+                likes: 0,
+                text_content: desc,
+                image_urls: imageUrls,
+                tags: [`#${cat}`, isVideo ? '#video' : '#text'],
+                video_url: videoUrl || null
+            });
+        
+        if (insertError) throw insertError;
+        
+        // 2. Načíst aktuální body uživatele
+        const { data: profile, error: fetchError } = await supabaseClient
+            .from('profiles')
+            .select('points')
+            .eq('id', TEMP_USER_ID)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        const newPoints = (profile.points || 0) + pointsEarned;
+        
+        // 3. Aktualizovat body
+        const { error: updateError } = await supabaseClient
+            .from('profiles')
+            .update({ points: newPoints })
+            .eq('id', TEMP_USER_ID);
+        
+        if (updateError) throw updateError;
+        
+        // 4. Vymazat formulář
+        document.getElementById('form-title').value = '';
+        document.getElementById('form-video-url').value = '';
+        document.getElementById('form-description').value = '1. \n2. \n3. ';
+        const imgContainer = document.getElementById('image-fields-container');
+        if (imgContainer) {
+            const fields = imgContainer.querySelectorAll('input');
+            fields.forEach((field, index) => {
+                if (index < 3) {
+                    field.value = '';
+                } else {
+                    field.remove();
+                }
+            });
+        }
+        
+        // 5. Zavřít modal a aktualizovat UI
+        closeModal('add-content-modal');
+        document.getElementById('header-points').textContent = newPoints + ' b.';
+        document.getElementById('user-rank-badge').textContent = getRankNameByPoints(newPoints);
+        currentUser.points = newPoints;
+        
+        // Znovu načíst seznam návodů a žebříček
+        await renderVideoFeed();
+        await renderLeaderboardPreview();
+        renderLevels();
+        
+        alert(`Skvělé! Tvůj návod byl publikován. Získal jsi +${pointsEarned} bodů! Tvoje skóre je nyní ${newPoints} bodů.`);
+    } catch (err) {
+        console.error('Chyba při přidávání návodu:', err);
+        alert('Chyba při ukládání návodu. Zkus to znovu.');
+    }
+}
+       // ============================================================
+// ŽÁDOSTI O ODESLÁNÍ DÁRKŮ
+// ============================================================
+let giftRequests = [];
+
+function addGiftRequest(username, oldRank, newRank, reward) {
+    const user = usersDatabase.find(u => u.username === username);
+    if (!user) return;
+    
+    // Kontrola, zda už žádost neexistuje
+    const exists = giftRequests.find(r => r.username === username && r.newRank === newRank && r.status === 'pending');
+    if (exists) return;
+    
+    giftRequests.push({
+        username: username,
+        email: user.email,
+        phone: user.phone,
+        address: user.username + ', ' + user.address,
+        oldRank: oldRank,
+        newRank: newRank,
+        reward: reward,
+        status: 'pending',
+        date: new Date().toLocaleString(),
+        note: ''
+    });
+    
+    renderGiftRequests();
+}
+
+function renderGiftRequests() {
+    const container = document.getElementById('gift-requests-list');
+    const countBadge = document.getElementById('gift-requests-count');
+    const fullContainer = document.getElementById('gift-requests-full-list');
+    
+    const pending = giftRequests.filter(r => r.status === 'pending');
+    if (countBadge) countBadge.textContent = pending.length;
+    
+    if (currentUser.role !== 'admin') {
+        if (container) container.innerHTML = `<p class="text-xs text-slate-400 italic">Pouze admin vidí žádosti.</p>`;
+        return;
+    }
+    
+    if (pending.length === 0) {
+        if (container) container.innerHTML = `<p class="text-xs text-slate-400 italic">Žádné nové žádosti o dárky.</p>`;
+        if (fullContainer) fullContainer.innerHTML = `<p class="text-sm text-slate-400 italic">Zatím žádné žádosti o dárky.</p>`;
+        return;
+    }
+    
+    const preview = pending.slice(0, 3);
+    if (container) {
+        container.innerHTML = preview.map(req => `
+            <div class="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-xl text-xs">
+                <div class="flex-1 truncate">
+                    <span class="font-bold text-slate-800">${req.username}</span>
+                    <span class="text-green-600 block truncate">${req.oldRank} → ${req.newRank} 🎉</span>
+                    <span class="text-slate-500 block truncate text-[10px]">${req.reward}</span>
+                </div>
+                <div class="flex space-x-1 shrink-0 ml-2">
+                    <button onclick="markGiftAsSent('${req.username}')" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">📦 Odesláno</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    if (fullContainer) {
+        fullContainer.innerHTML = giftRequests.map(req => `
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                <div class="flex justify-between items-start">
+                    <span class="font-bold text-slate-800 text-sm">${req.username}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-green-100 text-green-700' : req.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}">
+                        ${req.status === 'pending' ? '⏳ Čeká na odeslání' : req.status === 'sent' ? '✅ Odesláno' : '❌ Zrušeno'}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500">${req.oldRank} → ${req.newRank} 🎉</p>
+                <p class="text-xs text-slate-500">Odměna: ${req.reward}</p>
+                <p class="text-xs text-slate-500">Adresa: ${req.address}</p>
+                <p class="text-xs text-slate-500">Telefon: ${req.phone}</p>
+                <p class="text-xs text-slate-500">Email: ${req.email}</p>
+                <div class="flex justify-between text-[10px] text-slate-400"><span>Datum: ${req.date}</span></div>
+                ${req.status === 'pending' ? `
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="markGiftAsSent('${req.username}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">📦 Označit jako odesláno</button>
+                        <button onclick="cancelGiftRequest('${req.username}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">❌ Zrušit</button>
+                    </div>
+                ` : ''}
+                ${req.note ? `<p class="text-xs text-slate-500 italic">Poznámka: ${req.note}</p>` : ''}
+            </div>
+        `).join('');
+    }
+}
+
+function markGiftAsSent(username) {
+    if (currentUser.role !== 'admin') return;
+    const req = giftRequests.find(r => r.username === username && r.status === 'pending');
+    if (!req) return;
+    req.status = 'sent';
+    req.note = `Odesláno: ${new Date().toLocaleString()}`;
+    renderGiftRequests();
+    alert(`✅ Dárek pro ${username} byl označen jako odeslaný.`);
+}
+
+function cancelGiftRequest(username) {
+    if (currentUser.role !== 'admin') return;
+    const req = giftRequests.find(r => r.username === username && r.status === 'pending');
+    if (!req) return;
+    req.status = 'cancelled';
+    req.note = `Zrušeno: ${new Date().toLocaleString()}`;
+    renderGiftRequests();
+    alert(`❌ Žádost pro ${username} byla zrušena.`);
+}
+
+function renderGiftRequestsFull() {
+    renderGiftRequests();
+}
+
+// ============================================================
+// STATISTIKY
+// ============================================================
+let stats = {
+    visits: 0,
+    today: 0,
+    lastVisit: null,
+    dailyHistory: {}
+};
+
+function loadStats() {
+    const saved = localStorage.getItem('web_stats');
+    if (saved) {
+        try {
+            stats = JSON.parse(saved);
+        } catch (e) {}
+    }
+}
+
+function saveStats() {
+    localStorage.setItem('web_stats', JSON.stringify(stats));
+}
+
+function trackVisit() {
+    const today = new Date().toISOString().split('T')[0];
+    if (stats.lastVisit !== today) {
+        stats.today = 0;
+        stats.lastVisit = today;
+        if (!stats.dailyHistory[today]) {
+            stats.dailyHistory[today] = 0;
+        }
+    }
+    stats.visits++;
+    stats.today++;
+    stats.dailyHistory[today] = (stats.dailyHistory[today] || 0) + 1;
+    saveStats();
+    updateStatsDisplay();
+}
+
+function updateStatsDisplay() {
+    const todayEl = document.getElementById('stats-today');
+    const onlineEl = document.getElementById('stats-online');
+    const usersEl = document.getElementById('stats-users');
+    const totalEl = document.getElementById('stats-total');
+    if (todayEl) todayEl.textContent = stats.today || 0;
+    if (totalEl) totalEl.textContent = stats.visits || 0;
+    if (usersEl) usersEl.textContent = usersDatabase ? usersDatabase.length : 0;
+    if (onlineEl) {
+        const onlineEstimate = Math.max(1, Math.round((stats.today || 1) / 12));
+        onlineEl.textContent = onlineEstimate;
+    }
+}
+
+loadStats();
+trackVisit();
+        // ============================================================
+        // 16. INICIALIZACE
+        // ============================================================
+        // ============================================================
+// OBNOVENÍ PŘIHLÁŠENÍ PO F5
+// ============================================================
+   async function restoreSession() {
+    const saved = localStorage.getItem('vimejak_user');
+if (!saved) {
+        // Nejsme přihlášení → nastav hlavičku na výchozí hodnoty
+        currentUser = {
+            id: null,
+            role: 'neprihlaseny',
+            name: 'Nepřihlášený',
+            points: 0,
+            address: '',
+            phone: ''
+        };
+        updateUIForUser();
+        document.getElementById('header-username').textContent = 'Nepřihlášený';
+        document.getElementById('header-points').textContent = '0 b.';
+        document.getElementById('user-rank-badge').textContent = 'Nováček';
+        return;
+    }
+    
+    try {
+        const user = JSON.parse(saved);
+        
+        // Ověříme, že session je stále platná u Supabase
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        
+        if (!session) {
+            // Session vypršela → vyčistíme
+            localStorage.removeItem('vimejak_user');
+            return;
+        }
+        
+        // Načteme aktuální data z DB (body se mohly mezitím změnit)
+        const { data: profile } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+        
+        if (profile) {
+            currentUser = {
+                id: profile.id,
+                name: profile.username,
+                email: profile.email,
+                points: profile.points,
+                address: profile.address,
+                phone: profile.phone,
+                role: profile.role || 'user'
+            };
+            
+            localStorage.setItem('vimejak_user', JSON.stringify(currentUser));
+            
+            // Aktualizovat hlavičku
+            document.getElementById('header-username').textContent = currentUser.name;
+            document.getElementById('header-points').textContent = currentUser.points + ' b.';
+            document.getElementById('user-rank-badge').textContent = getRankNameByPoints(currentUser.points);
+                        updateUIForUser();
+        }
+    } catch (err) {
+        console.error('Chyba při obnovení session:', err);
+        localStorage.removeItem('vimejak_user');
+    }
+}
+window.addEventListener('DOMContentLoaded', async () => {
+    await restoreSession();
+    renderCategoriesGrid();
+       renderVideoFeed();
+    renderLevels();
+    renderLeaderboardPreview();
+    populateFormCategories();
+    renderDeleteRequests();
+    renderGiftRequests();
+    
+    document.getElementById('admin-requests-full-list').innerHTML = '';
+    document.getElementById('gift-requests-full-list').innerHTML = '';
+    
+    console.log('✅ Web plně funkční se Supabase!');
+});
+        
+</script>
+</body>
+</html>

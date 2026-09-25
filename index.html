@@ -1386,10 +1386,9 @@ async function handleLogout() {
         // ============================================================
         
 async function likeVideo(id) {
-    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
-    // Až budeme mít skutečné přihlašování, změníme na skutečného uživatele
-    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
-    const TEMP_USERNAME = 'Admin';
+        // Používáme skutečného přihlášeného uživatele
+    const TEMP_USER_ID = currentUser.id;
+    const TEMP_USERNAME = currentUser.name;
     
     try {
         // 1. Zkontroluj, jestli už tento uživatel lajknul
@@ -1672,10 +1671,9 @@ function formatCommentDate(isoString) {
        async function addNewComment(event) {
     event.preventDefault();
     
-    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
-    // Až budeme mít skutečné přihlašování, změníme na skutečného uživatele
-    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
-    const TEMP_USERNAME = 'Admin';
+        // Používáme skutečného přihlášeného uživatele
+    const TEMP_USER_ID = currentUser.id;
+    const TEMP_USERNAME = currentUser.name;
     
     const input = document.getElementById('comment-input');
     const text = input.value.trim();
@@ -1707,9 +1705,9 @@ function formatCommentDate(isoString) {
         // 13. HLÁŠENÍ SMAZÁNÍ A ADMIN
         // ============================================================
         async function requestDelete() {
-    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
-    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
-    const TEMP_USERNAME = 'Admin';
+        // Používáme skutečného přihlášeného uživatele
+    const TEMP_USER_ID = currentUser.id;
+    const TEMP_USERNAME = currentUser.name;
     
     // Kontrola úrovně Legenda
     const userRank = getRankNameByPoints(currentUser.points);
@@ -2244,9 +2242,9 @@ function addImageField() {
 }
 
 async function submitContent() {
-    // ⚠️ DOČASNÉ: Používáme Admina jako výchozího přihlášeného
-    const TEMP_USER_ID = 'b3dffe5c-55b2-4f94-90fb-2ae918b5b578';
-    const TEMP_USERNAME = 'Admin';
+        // Používáme skutečného přihlášeného uživatele
+    const TEMP_USER_ID = currentUser.id;
+    const TEMP_USERNAME = currentUser.name;
     
     const title = document.getElementById('form-title').value.trim();
     const cat = document.getElementById('form-category').value;

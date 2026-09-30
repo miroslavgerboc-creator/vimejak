@@ -1880,7 +1880,10 @@ Aktuální skóre: ${newPoints} bodů.`);
         // 5. Aktualizuj status žádosti
         await supabaseClient
             .from('delete_requests')
-            .update({ status: 'approved' })
+            .update({ 
+                status: 'approved',
+                resolved_at: new Date().toISOString()
+            })
             .eq('id', requestId);
         
         await renderDeleteRequests();
@@ -1897,14 +1900,29 @@ Aktuální skóre: ${newPoints} bodů.`);
 async function rejectDelete(requestId) {
     if (currentUser.role !== 'admin') return;
     
+    // Zeptáme se Admina na důvod
+    const reason = prompt('📝 Napiš důvod, proč návod NECHÁVÁŠ (tato zpráva se zobrazí uživateli, který žádost poslal):');
+    
+    // Pokud Admin klikl na "Zrušit" nebo nechal prázdné, neuděláme nic
+    if (reason === null) return;
+    if (reason.trim() === '') {
+        alert('⚠️ Musíš napsat důvod, proč žádost zamítáš.');
+        return;
+    }
+    
     try {
         await supabaseClient
             .from('delete_requests')
-            .update({ status: 'rejected' })
+            .update({ 
+                status: 'rejected',
+                admin_note: reason.trim(),
+                resolved_at: new Date().toISOString()
+            })
             .eq('id', requestId);
         
         await renderDeleteRequests();
         await renderAdminRequestsFull();
+        alert('✅ Žádost byla zamítnuta a uživatel dostane tvé vysvětlení.');
     } catch (err) {
         console.error('Chyba při zamítnutí žádosti:', err);
         alert('Chyba při zamítnutí žádosti.');

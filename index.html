@@ -1920,9 +1920,10 @@ async function rejectDelete(requestId) {
     }
     
     try {
-        const { data, error } = await supabaseClient
+                const { data, error } = await supabaseClient
             .from('delete_requests')
             .select('*')
+            .eq('status', 'pending')
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -1965,7 +1966,7 @@ async function rejectDelete(requestId) {
                 
                 ${videoExists ? `
                 <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
-                    ${embedUrl ? `
+                                        ${embedUrl ? `
                         <div class="aspect-video bg-black">
                             <iframe class="w-full h-full" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
                         </div>
@@ -1976,9 +1977,8 @@ async function rejectDelete(requestId) {
                             `).join('')}
                         </div>
                     ` : `
-                        <div class="aspect-video bg-slate-800 flex flex-col items-center justify-center text-slate-400 p-6 text-center select-none">
-                            <i class="fa-solid fa-file-invoice text-5xl text-amber-500 mb-4"></i>
-                            <h4 class="text-white font-black text-base">Textový návod</h4>
+                        <div class="bg-slate-50 p-3 max-h-80 overflow-y-auto custom-scrollbar">
+                            <div class="text-xs text-slate-700 whitespace-pre-wrap">${video.text_content || 'Žádný text.'}</div>
                         </div>
                     `}
                     <div class="p-4 space-y-2">

@@ -867,6 +867,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
         async function updateUserPoints(userId, newPoints) {
     try {
+            console.log('🔍 updateUserPoints voláno:', { userId, newPoints });
         // 1. Načti aktuální profil z DB
         const { data: user, error: fetchError } = await supabaseClient
             .from('profiles')
@@ -878,7 +879,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         const oldRank = getRankNameByPoints(user.points);
         const newRank = getRankNameByPoints(newPoints);
-        
+                console.log('🔍 oldRank:', oldRank, '| newRank:', newRank, '| změna?', oldRank !== newRank);
         // 2. Aktualizuj body v DB
         await supabaseClient
             .from('profiles')
@@ -893,7 +894,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 const reward = getRankByPoints(newPoints).reward;
                 
                 await addGiftRequest(userId, user.username, user.email, user.phone, user.address, oldRank, newRank, reward);
-                
+                                console.log('🔍 addGiftRequest dokončeno');
                 setTimeout(() => {
                     alert(`🎉 GRATULUJEME! DOSÁHL/A JSI NOVÉ ÚROVNĚ!
 

@@ -1970,10 +1970,10 @@ async function rejectDelete(requestId) {
                         <div class="aspect-video bg-black">
                             <iframe class="w-full h-full" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
                         </div>
-                    ` : hasImages ? `
-                        <div class="p-3 bg-slate-100 grid grid-cols-3 gap-2">
-                            ${video.image_urls.slice(0, 6).map(url => `
-                                <img src="${url}" class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80" onclick="window.open('${url}', '_blank')" onerror="this.style.display='none'">
+                                        ` : hasImages ? `
+                        <div class="p-3 bg-slate-100 grid grid-cols-2 gap-3">
+                            ${video.image_urls.slice(0, 4).map(url => `
+                                <img src="${url}" class="w-full max-h-64 object-contain rounded-lg cursor-pointer hover:opacity-80 bg-slate-900" onclick="window.open('${url}', '_blank')" onerror="this.style.display='none'">
                             `).join('')}
                         </div>
                     ` : `

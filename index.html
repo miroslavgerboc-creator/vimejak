@@ -1947,6 +1947,7 @@ async function rejectDelete(requestId) {
             const videoExists = video !== undefined && video !== null;
             const hasVideo = videoExists && video.video_url && video.video_url.trim().length > 0;
             const embedUrl = hasVideo ? getEmbedUrl(video.video_url) : null;
+            const hasImages = videoExists && video.image_urls && video.image_urls.length > 0;
             
             return `
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
@@ -1968,6 +1969,12 @@ async function rejectDelete(requestId) {
                         <div class="aspect-video bg-black">
                             <iframe class="w-full h-full" src="${embedUrl}" frameborder="0" allowfullscreen></iframe>
                         </div>
+                    ` : hasImages ? `
+                        <div class="p-3 bg-slate-100 grid grid-cols-3 gap-2">
+                            ${video.image_urls.slice(0, 6).map(url => `
+                                <img src="${url}" class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80" onclick="window.open('${url}', '_blank')" onerror="this.style.display='none'">
+                            `).join('')}
+                        </div>
                     ` : `
                         <div class="aspect-video bg-slate-800 flex flex-col items-center justify-center text-slate-400 p-6 text-center select-none">
                             <i class="fa-solid fa-file-invoice text-5xl text-amber-500 mb-4"></i>
@@ -1988,6 +1995,13 @@ async function rejectDelete(requestId) {
                             <span class="text-sm text-slate-700">${video.category}</span>
                         </div>
                     </div>
+                    
+                    ${video.text_content ? `
+                        <div class="px-4 pb-4">
+                            <span class="text-xs font-bold text-amber-600 block mb-2">📝 Celý postup:</span>
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-700 whitespace-pre-wrap max-h-60 overflow-y-auto custom-scrollbar">${video.text_content}</div>
+                        </div>
+                    ` : ''}
                 </div>
                 ` : `
                 <div class="bg-white border border-slate-200 rounded-xl p-4">
@@ -1997,7 +2011,7 @@ async function rejectDelete(requestId) {
                 `}
                 
                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <span class="text-xs font-bold text-amber-700">📝 Důvod:</span>
+                    <span class="text-xs font-bold text-amber-700">📝 Důvod nahlášení:</span>
                     <p class="text-xs text-slate-700 mt-1">${req.reason || 'Nebyl uveden.'}</p>
                 </div>
                 

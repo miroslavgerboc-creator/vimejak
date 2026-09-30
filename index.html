@@ -2302,7 +2302,7 @@ async function submitContent() {
         
         if (insertError) throw insertError;
         
-        // 2. Načíst aktuální body uživatele
+                // 2. Načíst aktuální body uživatele
         const { data: profile, error: fetchError } = await supabaseClient
             .from('profiles')
             .select('points')
@@ -2313,13 +2313,8 @@ async function submitContent() {
         
         const newPoints = (profile.points || 0) + pointsEarned;
         
-        // 3. Aktualizovat body
-        const { error: updateError } = await supabaseClient
-            .from('profiles')
-            .update({ points: newPoints })
-            .eq('id', TEMP_USER_ID);
-        
-        if (updateError) throw updateError;
+        // 3. Aktualizovat body PŘES updateUserPoints (kontroluje úroveň + vytváří žádost o dárek)
+        await updateUserPoints(TEMP_USER_ID, newPoints);
         
         // 4. Vymazat formulář
         document.getElementById('form-title').value = '';

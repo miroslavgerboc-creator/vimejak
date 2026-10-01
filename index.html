@@ -201,6 +201,16 @@
             </div>
 
             <div class="space-y-6">
+                                <!-- 📬 PANEL ZPRÁVY (vidí všichni přihlášení) -->
+                <div id="notifications-panel" class="hidden bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-4">
+                    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+                        <span class="text-blue-500"><i class="fa-solid fa-envelope"></i></span>
+                        <span class="font-bold text-slate-800">Zprávy</span>
+                        <span id="notifications-count" class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                    </h3>
+                    <div id="notifications-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar text-sm"></div>
+                </div>
+                
                 <div id="admin-panel" class="bg-white border-2 border-amber-500/50 rounded-2xl p-5 shadow-sm space-y-4">
     <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
         <span class="text-amber-500"><i class="fa-solid fa-flag"></i></span>
@@ -1097,7 +1107,7 @@ Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
         await renderLeaderboardPreview();
         renderDeleteRequests();
         renderGiftRequests();
-        
+                await renderNotifications();
         // 6. Zavřít modal a aktualizovat hlavičku
         closeModal('auth-modal');
         document.getElementById('header-username').textContent = currentUser.name;
@@ -1134,7 +1144,7 @@ async function handleLogout() {
         await renderLeaderboardPreview();
         renderDeleteRequests();
         renderGiftRequests();
-        
+                await renderNotifications();
         document.getElementById('header-username').textContent = 'Nepřihlášený';
         document.getElementById('header-points').textContent = '0 b.';
         document.getElementById('user-rank-badge').textContent = 'Nováček';
@@ -1817,8 +1827,14 @@ async function renderDeleteRequests() {
         console.error('Chyba při načítání žádostí:', err);
         container.innerHTML = '<p class="text-xs text-red-500 italic">Chyba při načítání žádostí.</p>';
     }
+    
+    // Zavolej i renderNotifications (aby se aktualizovaly zprávy)
+    if (typeof renderNotifications === 'function') {
+        await renderNotifications();
+    }
 }
-        async function approveDelete(requestId, videoId) {
+
+async function approveDelete(requestId, videoId) {
     if (currentUser.role !== 'admin') return;
     
     try {
@@ -2443,71 +2459,142 @@ async function renderGiftRequests() {
         // Pokud není admin, schováme seznam
         if (currentUser.role !== 'admin') {
             container.innerHTML = '<p class="text-xs text-slate-400 italic">Pouze admin vidí žádosti.</p>';
-            return;
-        }
-        
-        if (pending.length === 0) {
+        } else if (pending.length === 0) {
             container.innerHTML = '<p class="text-xs text-slate-400 italic">Žádné nové žádosti o dárky.</p>';
             if (fullContainer) fullContainer.innerHTML = '<p class="text-sm text-slate-400 italic">Zatím žádné žádosti o dárky.</p>';
-            return;
-        }
-        
-        // Náhled (3 poslední)
-        const preview = pending.slice(0, 3);
-        container.innerHTML = preview.map(req => `
-            <div class="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-xl text-xs">
-                <div class="flex-1 truncate">
-                    <span class="font-bold text-slate-800">${req.username}</span>
-                    <span class="text-green-600 block truncate">${req.old_rank} → ${req.new_rank} 🎉</span>
-                    <span class="text-slate-500 block truncate text-[10px]">${req.reward}</span>
-                </div>
-                <div class="flex space-x-1 shrink-0 ml-2">
-                    <button onclick="markGiftAsSent(${req.id})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">📦 Odesláno</button>
-                </div>
-            </div>
-        `).join('');
-        
-        // Plný seznam (v modalu)
-        if (fullContainer) {
-            const { data: allData } = await supabaseClient
-                .from('gift_requests')
-                .select('*')
-                .order('created_at', { ascending: false });
-            
-            const all = allData || [];
-            
-            fullContainer.innerHTML = all.map(req => `
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
-                    <div class="flex justify-between items-start">
-                        <span class="font-bold text-slate-800 text-sm">${req.username}</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-green-100 text-green-700' : req.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}">
-                            ${req.status === 'pending' ? '⏳ Čeká na odeslání' : req.status === 'sent' ? '✅ Odesláno' : '❌ Zrušeno'}
-                        </span>
+        } else {
+            // Náhled (3 poslední)
+            const preview = pending.slice(0, 3);
+            container.innerHTML = preview.map(req => `
+                <div class="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded-xl text-xs">
+                    <div class="flex-1 truncate">
+                        <span class="font-bold text-slate-800">${req.username}</span>
+                        <span class="text-green-600 block truncate">${req.old_rank} → ${req.new_rank} 🎉</span>
+                        <span class="text-slate-500 block truncate text-[10px]">${req.reward}</span>
                     </div>
-                    <p class="text-xs text-slate-500">${req.old_rank} → ${req.new_rank} 🎉</p>
-                    <p class="text-xs text-slate-500">Odměna: ${req.reward}</p>
-                    <p class="text-xs text-slate-500">Adresa: ${req.address || '—'}</p>
-                    <p class="text-xs text-slate-500">Telefon: ${req.phone || '—'}</p>
-                    <p class="text-xs text-slate-500">Email: ${req.email}</p>
-                    <div class="flex justify-between text-[10px] text-slate-400">
-                        <span>Datum: ${new Date(req.created_at).toLocaleString('cs-CZ')}</span>
+                    <div class="flex space-x-1 shrink-0 ml-2">
+                        <button onclick="markGiftAsSent(${req.id})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-lg text-[10px] font-bold">📦 Odesláno</button>
                     </div>
-                    ${req.status === 'pending' ? `
-                        <div class="flex gap-2 pt-1">
-                            <button onclick="markGiftAsSent(${req.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">📦 Odesláno</button>
-                            <button onclick="cancelGiftRequest(${req.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">❌ Zrušit</button>
-                        </div>
-                    ` : ''}
-                    ${req.note ? `<p class="text-xs text-slate-500 italic">Poznámka: ${req.note}</p>` : ''}
-              </div>
+                </div>
             `).join('');
+            
+            // Plný seznam (v modalu)
+            if (fullContainer) {
+                const { data: allData } = await supabaseClient
+                    .from('gift_requests')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                const all = allData || [];
+                
+                fullContainer.innerHTML = all.map(req => `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-slate-800 text-sm">${req.username}</span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'pending' ? 'bg-green-100 text-green-700' : req.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}">
+                                ${req.status === 'pending' ? '⏳ Čeká na odeslání' : req.status === 'sent' ? '✅ Odesláno' : '❌ Zrušeno'}
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500">${req.old_rank} → ${req.new_rank} 🎉</p>
+                        <p class="text-xs text-slate-500">Odměna: ${req.reward}</p>
+                        <p class="text-xs text-slate-500">Adresa: ${req.address || '—'}</p>
+                        <p class="text-xs text-slate-500">Telefon: ${req.phone || '—'}</p>
+                        <p class="text-xs text-slate-500">Email: ${req.email}</p>
+                        <div class="flex justify-between text-[10px] text-slate-400">
+                            <span>Datum: ${new Date(req.created_at).toLocaleString('cs-CZ')}</span>
+                        </div>
+                        ${req.status === 'pending' ? `
+                            <div class="flex gap-2 pt-1">
+                                <button onclick="markGiftAsSent(${req.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-lg text-xs font-bold">📦 Odesláno</button>
+                                <button onclick="cancelGiftRequest(${req.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-xs font-bold">❌ Zrušit</button>
+                            </div>
+                        ` : ''}
+                        ${req.note ? `<p class="text-xs text-slate-500 italic">Poznámka: ${req.note}</p>` : ''}
+                    </div>
+                `).join('');
+            }
         }
     } catch (err) {
         console.error('Chyba při načítání žádostí o dárky:', err);
         container.innerHTML = '<p class="text-xs text-red-500 italic">Chyba při načítání žádostí.</p>';
     }
+    
+    // Zavolej i renderNotifications (aby se aktualizovaly zprávy)
+    if (typeof renderNotifications === 'function') {
+        await renderNotifications();
+    }
 }
-
+async function renderNotifications() {
+    const panel = document.getElementById('notifications-panel');
+    const container = document.getElementById('notifications-list');
+    const countBadge = document.getElementById('notifications-count');
+    if (!panel || !container) return;
+    
+    // Pokud není přihlášený, panel skryjeme
+    if (currentUser.role === 'neprihlaseny' || !currentUser.id) {
+        panel.classList.add('hidden');
+        return;
+    }
+    
+    panel.classList.remove('hidden');
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const notifications = data || [];
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        
+        if (countBadge) countBadge.textContent = unreadCount;
+        
+        if (notifications.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-400 italic text-center py-3">Žádné nové zprávy.</p>';
+            return;
+        }
+        
+        container.innerHTML = notifications.map(n => {
+            // Ikona a barva podle typu
+            let icon = '📬';
+            let iconColor = 'text-blue-500';
+            let bgColor = 'bg-blue-50 border-blue-200';
+            
+            if (n.type === 'delete_approved') {
+                icon = '✅';
+                iconColor = 'text-green-600';
+                bgColor = 'bg-green-50 border-green-200';
+            } else if (n.type === 'delete_rejected') {
+                icon = '❌';
+                iconColor = 'text-red-600';
+                bgColor = 'bg-red-50 border-red-200';
+            } else if (n.type === 'video_deleted') {
+                icon = '📌';
+                iconColor = 'text-amber-600';
+                bgColor = 'bg-amber-50 border-amber-200';
+            }
+            
+            return `
+                <div class="border ${bgColor} rounded-xl p-3 space-y-1 ${!n.is_read ? 'ring-1 ring-blue-300' : ''}">
+                    <div class="flex items-start justify-between gap-2">
+                        <span class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                            <span class="${iconColor}">${icon}</span>
+                            ${n.title}
+                        </span>
+                        <span class="text-[10px] text-slate-400 whitespace-nowrap">${formatCommentDate(n.created_at)}</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed pl-5">${n.message}</p>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Chyba při načítání zpráv:', err);
+        container.innerHTML = '<p class="text-xs text-red-500 italic text-center py-3">Chyba při načítání zpráv.</p>';
+    }
+}
 async function markGiftAsSent(requestId) {
     if (currentUser.role !== 'admin') return;
     

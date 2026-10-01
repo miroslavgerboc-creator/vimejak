@@ -1932,9 +1932,12 @@ Aktuální skóre: ${newPoints} bodů.`);
         await renderVideoFeed();
         await renderLeaderboardPreview();
         if (currentOpenedVideoId === videoId) closeModal('detail-modal');
-    } catch (err) {
+        } catch (err) {
         console.error('Chyba při schvalování smazání:', err);
-        alert('Chyba při schvalování smazání.');
+        console.error('Error message:', err?.message);
+        console.error('Error stack:', err?.stack);
+        console.error('Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
+        alert('Chyba při schvalování smazání: ' + (err?.message || 'neznámá chyba'));
     }
 }
 

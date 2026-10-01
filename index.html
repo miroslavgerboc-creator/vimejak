@@ -1893,7 +1893,30 @@ Aktuální skóre: ${newPoints} bodů.`);
                 .eq('id', videoId);
         }
         
-        // 5. Aktualizuj status žádosti
+                // 5. Vytvoř notifikace
+        // 5a. Autorovi videa
+        if (video && video.author_id) {
+            await createNotification(
+                video.author_id,
+                'video_deleted',
+                '📌 Tvůj návod byl smazán',
+                `Název: "${video.title}"\nDůvod nahlášení: ${req.reason || 'neuveden'}\n\nBylo ti odečteno ${pointsToDeduct} bodů.`,
+                videoId
+            );
+        }
+        
+        // 5b. Nahlašovateli
+        if (req.requested_by_id) {
+            await createNotification(
+                req.requested_by_id,
+                'delete_approved',
+                '✅ Žádost o smazání byla schválena',
+                `Název: "${video ? video.title : req.video_title}"\nDěkujeme za nahlášení.`,
+                requestId
+            );
+        }
+        
+        // 6. Aktualizuj status žádosti
         await supabaseClient
             .from('delete_requests')
             .update({ 
@@ -1927,7 +1950,7 @@ async function rejectDelete(requestId) {
     }
     
     try {
-        await supabaseClient
+                await supabaseClient
             .from('delete_requests')
             .update({ 
                 status: 'rejected',
@@ -1935,6 +1958,23 @@ async function rejectDelete(requestId) {
                 resolved_at: new Date().toISOString()
             })
             .eq('id', requestId);
+        
+        // Vytvoř notifikaci pro nahlašovatele
+        const { data: req } = await supabaseClient
+            .from('delete_requests')
+            .select('requested_by_id, video_title')
+            .eq('id', requestId)
+            .single();
+        
+        if (req && req.requested_by_id) {
+            await createNotification(
+                req.requested_by_id,
+                'delete_rejected',
+                '❌ Žádost o smazání byla zamítnuta',
+                `Název: "${req.video_title}"\nDůvod: ${reason.trim()}`,
+                requestId
+            );
+        }
         
         await renderDeleteRequests();
         await renderAdminRequestsFull();
@@ -2522,6 +2562,24 @@ async function renderGiftRequests() {
     // Zavolej i renderNotifications (aby se aktualizovaly zprávy)
     if (typeof renderNotifications === 'function') {
         await renderNotifications();
+    }
+}
+async function createNotification(userId, type, title, message, relatedId = null) {
+    try {
+        const { error } = await supabaseClient
+            .from('notifications')
+            .insert({
+                user_id: userId,
+                type: type,
+                title: title,
+                message: message,
+                related_id: relatedId,
+                is_read: false
+            });
+        
+        if (error) throw error;
+    } catch (err) {
+        console.error('Chyba při vytváření notifikace:', err);
     }
 }
 async function renderNotifications() {

@@ -1858,9 +1858,11 @@ async function approveDelete(requestId, videoId) {
             .eq('id', videoId)
             .single();
         
+                // Zjisti body k odečtení (mimo if, aby byly dostupné i pro notifikace)
+        let pointsToDeduct = 0;
         if (video) {
             const isVideo = video.video_url && video.video_url.trim().length > 0;
-            const pointsToDeduct = isVideo ? 20 : 50;
+            pointsToDeduct = isVideo ? 20 : 50;
             
             // 3. Odečti body autorovi
             const { data: author } = await supabaseClient

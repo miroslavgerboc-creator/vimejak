@@ -1371,34 +1371,34 @@ async function likeVideo(id) {
         renderVideoFeed();
         if (currentOpenedVideoId === id) {
             document.getElementById('detail-likes-count').textContent = newLikesCount;
-            updateLikeButtonState(true);
+            updateLikeButtonState(true, newLikesCount);
         }
     } catch (err) {
         console.error('Chyba při lajkování:', err);
         alert('Chyba při lajkování. Zkus to znovu.');
     }
 }
-        function updateLikeButtonState(isLiked) {
-            const likeBtn = document.getElementById('detail-like-btn');
-            if (!likeBtn) return;
-            const targetVideo = videos.find(v => v.id === currentOpenedVideoId);
-            const currentLikesCount = targetVideo ? targetVideo.likes : 0;
-            if (currentUser.role === 'neprihlaseny') {
-                likeBtn.className = 'flex-1 bg-slate-100 border border-slate-200 text-slate-400 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-not-allowed opacity-60';
-                likeBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Přihlas se`;
-                likeBtn.onclick = () => { alert('🔒 Pro lajkování se musíš přihlásit!'); openModal('auth-modal'); };
-                return;
-            }
-            if (isLiked) {
-                likeBtn.className = 'flex-1 bg-rose-50 border border-rose-200 text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-not-allowed';
-                likeBtn.innerHTML = `<i class="fa-solid fa-heart"></i> Již lajknuto (<span id="detail-likes-count">${currentLikesCount}</span>)`;
-                likeBtn.onclick = null;
-            } else {
-                likeBtn.className = 'flex-1 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2';
-                likeBtn.innerHTML = `<i class="fa-regular fa-heart"></i> Poděkovat lajkem (<span id="detail-likes-count">${currentLikesCount}</span>)`;
-                likeBtn.onclick = () => likeVideo(currentOpenedVideoId);
-            }
-        }
+        function updateLikeButtonState(isLiked, videoLikesCount = 0) {
+    const likeBtn = document.getElementById('detail-like-btn');
+    if (!likeBtn) return;
+    const currentLikesCount = videoLikesCount;
+    
+    if (currentUser.role === 'neprihlaseny') {
+        likeBtn.className = 'flex-1 bg-slate-100 border border-slate-200 text-slate-400 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-not-allowed opacity-60';
+        likeBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Přihlas se`;
+        likeBtn.onclick = () => { alert('🔒 Pro lajkování se musíš přihlásit!'); openModal('auth-modal'); };
+        return;
+    }
+    if (isLiked) {
+        likeBtn.className = 'flex-1 bg-rose-50 border border-rose-200 text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 cursor-not-allowed';
+        likeBtn.innerHTML = `<i class="fa-solid fa-heart"></i> Již lajknuto (<span id="detail-likes-count">${currentLikesCount}</span>)`;
+        likeBtn.onclick = null;
+    } else {
+        likeBtn.className = 'flex-1 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-slate-700 hover:text-rose-600 font-extrabold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2';
+        likeBtn.innerHTML = `<i class="fa-regular fa-heart"></i> Poděkovat lajkem (<span id="detail-likes-count">${currentLikesCount}</span>)`;
+        likeBtn.onclick = () => likeVideo(currentOpenedVideoId);
+    }
+}
 
         // ============================================================
         // 12. DETAIL VIDEA
@@ -1509,7 +1509,7 @@ async function viewDetail(id) {
             if (imageContainer) imageContainer.classList.add('hidden');
         }
         
-        updateLikeButtonState(likedVideos.includes(id));
+        updateLikeButtonState(likedVideos.includes(id), vid.likes || 0);
         updateDetailButtons();
         renderComments(id);
         openModal('detail-modal');

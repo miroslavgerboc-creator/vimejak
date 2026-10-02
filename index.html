@@ -698,17 +698,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // ============================================================
         let currentUser = { role: 'admin', name: 'Admin', points: 99999, address: 'Admin adresa', phone: '+420 123 456 789' };
 
-        let usersDatabase = [
-    { username: 'Admin', email: 'admin@vimejak.cz', password: 'Admin123', address: 'Admin adresa', phone: '+420 123 456 789', points: 99999 },
-    { username: 'Legenda', email: 'legenda@vimejak.cz', password: 'Legenda123', address: 'Praha 1', phone: '+420 777 888 999', points: 32000 },
-    // NOVÁČEK: nastaven na 4950 bodů (po přidání návodu = 5000 = Mazák)
-    { username: 'Nováček', email: 'novacek@email.cz', password: 'Novacek123', address: 'Brno, Česká 123', phone: '+420 606 111 222', points: 4950 },
-    // GURU: nastaven na 29950 bodů (po přidání návodu = 30000 = Legenda)
-    { username: 'Guru', email: 'guru@email.cz', password: 'Guru123', address: 'Praha, Hlavní 5', phone: '+420 777 888 999', points: 29950 },
-    { username: 'Pepa Všeuměl', email: 'pepa@email.cz', password: 'Pepa123', address: 'Brno, Česká 123', phone: '+420 606 123 456', points: 240 }
-];
-
-        let deleteRequests = [];
         let levelNotifiedUsers = {};
         let likedVideos = JSON.parse(localStorage.getItem('likedVideos')) || [];
 
@@ -733,34 +722,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // ============================================================
         // 5. VIDEÁ A KOMENTÁŘE
         // ============================================================
-        let videos = [
-            { id: 1, title: "Oprava kapajícího kohoutku u dřezu", category: "vodovod", subcategory: "Kohoutky", author: "Mona_Kreativ", views: 120, likes: 25, text: "Základní oprava kartuše a výměna těsnění bez volání instalatéra.", tags: ["#voda", "#kohoutek", "#tesneni"], videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-            { id: 2, title: "Jak vyměnit stěrače na autě", category: "auto", subcategory: "Pneumatiky", author: "Pepa_Z_Hutí", views: 420, likes: 88, text: "Jednoduché video ukazující výměnu stěračů pro začátečníky.", tags: ["#auto", "#sterace", "#snadne"], videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-            { id: 3, title: "Nastavení bezpečné domácí Wi-Fi", category: "it", subcategory: "Wi-Fi", author: "GeekVláďa", views: 89, likes: 14, text: "Zabezpečení vaší sítě, změna hesla routeru a zprovoznění sítě pro hosty.", tags: ["#wifi", "#it", "#internet", "#bezpecnost"], videoUrl: "" },
-            { id: 4, title: "Dokonalá babiččina svíčková na smetaně", category: "vareni", subcategory: "Tradiční česká", author: "Kuchařka_Jana", views: 2310, likes: 450, text: "Tradiční recept krok za krokem včetně pasírování zeleniny.", tags: ["#svickova", "#recept", "#maso", "#cesko"], videoUrl: "" },
-            { id: 5, title: "Jak opravit zásuvku ve zdi", category: "elektro", subcategory: "Zásuvky", author: "Blesk_Franta", views: 340, likes: 29, text: "Návod jak bezpečně vyměnit prasklý kryt nebo celou zásuvku.", tags: ["#elektro", "#zasuvka", "#proud"], videoUrl: "" },
-            { id: 6, title: "Výroba zahradního stolku z palet", category: "diy", subcategory: "Dřevo", author: "Kutil_Tom", views: 512, likes: 67, text: "Přeměňte obyčejné dřevěné palety na krásný kus nábytku na terasu.", tags: ["#palety", "#diy", "#stul", "#zahrada"], videoUrl: "" },
-            { id: 7, title: "Jak správně vyčistit kávovar", category: "domacnost", subcategory: "Úklidové triky", author: "Kávomil_Patrik", views: 156, likes: 18, text: "Jak odvápnit kávovar pomocí kyseliny citronové, levně a efektivně.", tags: ["#kava", "#kavovar", "#cisteni", "#ocet"], videoUrl: "" },
-            { id: 8, title: "Výcvik štěněte: Základní povel 'Ke mně!'", category: "zvirata", subcategory: "Výcvik", author: "Dog_Trainer_Mila", views: 1045, likes: 198, text: "Naučte svého pejska spolehlivě přiběhnout na zavolání.", tags: ["#pes", "#stene", "#vycvik", "#kemne"], videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
-        ];
-
-        let commentsDatabase = {
-            1: [{ author: "Kutil_Pavel", date: "před 2 hodinami", text: "Super návod! Přesně tohle mi dneska ušetřilo tisícovku." }],
-            2: [{ author: "Autofanda", date: "před 3 dny", text: "Funguje to i na zadní stěrač u Octavie?" }],
-            8: [{ author: "Pejskař_Honza", date: "před hodinou", text: "Skvělé tipy, s mým labradorem to hned začalo fungovat!" }]
-        };
-
-        let leaderboard = [
-            { name: "Legenda", points: 32000 },
-            { name: "Admin", points: 99999 },
-            { name: "Guru", points: 18000 },
-            { name: "Nováček", points: 1500 },
-            { name: "mg", points: 780 },
-            { name: "mira", points: 490 },
-            { name: "Pepa Všeuměl", points: 240 }
-        ];
-
-        let activeCategory = "vsechno";
+        
+            let activeCategory = "vsechno";
         let activeSubcategory = "vsechno";
         let currentSort = "latest";
         let currentPage = 1;
@@ -784,49 +747,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // ============================================================
         // 7. UŽIVATELSKÉ FUNKCE
         // ============================================================
-        function switchUser(role) {
-    currentUser.role = role;
-    if (role === 'admin') {
-        const user = usersDatabase.find(u => u.username === 'Admin');
-        currentUser.name = user ? user.username : 'Admin';
-        currentUser.points = user ? user.points : 99999;
-        currentUser.address = user ? user.address : 'Admin adresa';
-        currentUser.phone = user ? user.phone : '+420 123 456 789';
-    } else if (role === 'legenda') {
-        const user = usersDatabase.find(u => u.username === 'Legenda');
-        currentUser.name = user ? user.username : 'Legenda';
-        currentUser.points = user ? user.points : 32000;
-        currentUser.address = user ? user.address : 'Praha 1';
-        currentUser.phone = user ? user.phone : '+420 777 888 999';
-    } else if (role === 'novacek') {
-        const user = usersDatabase.find(u => u.username === 'Nováček');
-        currentUser.name = user ? user.username : 'Nováček';
-        currentUser.points = user ? user.points : 4950;
-        currentUser.address = user ? user.address : 'Brno, Česká 123';
-        currentUser.phone = user ? user.phone : '+420 606 111 222';
-    } else if (role === 'guru') {
-        const user = usersDatabase.find(u => u.username === 'Guru');
-        currentUser.name = user ? user.username : 'Guru';
-        currentUser.points = user ? user.points : 29950;
-        currentUser.address = user ? user.address : 'Praha, Hlavní 5';
-        currentUser.phone = user ? user.phone : '+420 777 888 999';
-    } else {
-        currentUser.name = 'Nepřihlášený';
-        currentUser.points = 0;
-        currentUser.address = '';
-        currentUser.phone = '';
-    }
-    updateUIForUser();
-    renderVideoFeed();
-    renderLevels();
-    renderLeaderboardPreview();
-    renderDeleteRequests();
-    if (currentOpenedVideoId) updateDetailButtons();
-    document.getElementById('header-username').textContent = currentUser.name;
-    document.getElementById('header-points').textContent = currentUser.points + ' b.';
-    document.getElementById('user-rank-badge').textContent = getRankNameByPoints(currentUser.points);
-}
-
+        
         function updateUIForUser() {
             const isLoggedIn = currentUser.role !== 'neprihlaseny';
             const isAdmin = currentUser.role === 'admin';
@@ -2445,7 +2366,6 @@ async function submitContent() {
        // ============================================================
 // ŽÁDOSTI O ODESLÁNÍ DÁRKŮ
 // ============================================================
-let giftRequests = [];
 
 async function addGiftRequest(userId, username, email, phone, address, oldRank, newRank, reward) {
     try {
@@ -2749,7 +2669,15 @@ function updateStatsDisplay() {
     const totalEl = document.getElementById('stats-total');
     if (todayEl) todayEl.textContent = stats.today || 0;
     if (totalEl) totalEl.textContent = stats.visits || 0;
-    if (usersEl) usersEl.textContent = usersDatabase ? usersDatabase.length : 0;
+        if (usersEl) {
+        // Načteme počet uživatelů ze Supabase
+        supabaseClient
+            .from('profiles')
+            .select('id', { count: 'exact', head: true })
+            .then(({ count }) => {
+                usersEl.textContent = count || 0;
+            });
+    }
     if (onlineEl) {
         const onlineEstimate = Math.max(1, Math.round((stats.today || 1) / 12));
         onlineEl.textContent = onlineEstimate;

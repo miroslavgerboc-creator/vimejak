@@ -2199,40 +2199,51 @@ async function renderFullLeaderboard(query = '') {
     renderFullLeaderboard(query);
 }
 
-        function openProfileModal() {
-            const pts = currentUser.points;
-            document.getElementById('profile-username').textContent = currentUser.name;
-            document.getElementById('profile-points').textContent = pts;
-            const userVideos = videos.filter(v => v.author === currentUser.name);
-            document.getElementById('profile-videos-count').textContent = userVideos.length;
-            const currentRank = getRankByPoints(pts);
-            document.getElementById('profile-rank-tag').textContent = currentRank ? currentRank.name : 'Nováček';
-            const rewardsContainer = document.getElementById('profile-rewards');
-            if (currentRank) {
-                const allRanks = rankDefinitions.filter(r => r.max <= pts || (r.max === Infinity && pts >= r.min));
-                if (allRanks.length > 0) {
-                    rewardsContainer.innerHTML = allRanks.map(r => `<div class="flex items-center gap-2 py-0.5"><span class="text-amber-500"><i class="fa-solid fa-check-circle"></i></span><span><strong>${r.name}:</strong> ${r.reward}</span></div>`).join('');
-                } else {
-                    rewardsContainer.innerHTML = `<span class="text-slate-400">Zatím žádné odměny. Pokračuj v aktivitě!</span>`;
-                }
-            }
-            const nextRank = rankDefinitions.find(r => r.min > pts);
-            const progressText = document.getElementById('profile-progress-text');
-            const progressBar = document.getElementById('profile-progress-bar');
-            if (nextRank) {
-                const prevRank = rankDefinitions.find(r => r.max < pts) || rankDefinitions[0];
-                const pointsNeeded = nextRank.min - pts;
-                progressText.innerHTML = `<span class="text-amber-500">${formatPoints(pointsNeeded)} b.</span> do úrovně <strong class="text-slate-900">${nextRank.name}</strong>`;
-                const range = nextRank.min - prevRank.min;
-                const progressInsideRange = pts - prevRank.min;
-                const percentage = Math.min(100, Math.max(0, (progressInsideRange / range) * 100));
-                progressBar.style.width = `${percentage}%`;
-            } else {
-                progressText.innerHTML = `<span class="text-amber-500 font-bold">Dosáhl jsi vrcholu! 👑</span>`;
-                progressBar.style.width = '100%';
-            }
-            openModal('profile-modal');
+        async function openProfileModal() {
+    const pts = currentUser.points;
+    document.getElementById('profile-username').textContent = currentUser.name;
+    document.getElementById('profile-points').textContent = pts;
+    
+    // Načti počet videí uživatele ze Supabase
+    try {
+        const { count } = await supabaseClient
+            .from('videos')
+            .select('id', { count: 'exact', head: true })
+            .eq('author_id', currentUser.id);
+        
+        document.getElementById('profile-videos-count').textContent = count || 0;
+    } catch (err) {
+        document.getElementById('profile-videos-count').textContent = 0;
+    }
+    
+    const currentRank = getRankByPoints(pts);
+    document.getElementById('profile-rank-tag').textContent = currentRank ? currentRank.name : 'Nováček';
+    const rewardsContainer = document.getElementById('profile-rewards');
+    if (currentRank) {
+        const allRanks = rankDefinitions.filter(r => r.max <= pts || (r.max === Infinity && pts >= r.min));
+        if (allRanks.length > 0) {
+            rewardsContainer.innerHTML = allRanks.map(r => `<div class="flex items-center gap-2 py-0.5"><span class="text-amber-500"><i class="fa-solid fa-check-circle"></i></span><span><strong>${r.name}:</strong> ${r.reward}</span></div>`).join('');
+        } else {
+            rewardsContainer.innerHTML = `<span class="text-slate-400">Zatím žádné odměny. Pokračuj v aktivitě!</span>`;
         }
+    }
+    const nextRank = rankDefinitions.find(r => r.min > pts);
+    const progressText = document.getElementById('profile-progress-text');
+    const progressBar = document.getElementById('profile-progress-bar');
+    if (nextRank) {
+        const prevRank = rankDefinitions.find(r => r.max < pts) || rankDefinitions[0];
+        const pointsNeeded = nextRank.min - pts;
+        progressText.innerHTML = `<span class="text-amber-500">${formatPoints(pointsNeeded)} b.</span> do úrovně <strong class="text-slate-900">${nextRank.name}</strong>`;
+        const range = nextRank.min - prevRank.min;
+        const progressInsideRange = pts - prevRank.min;
+        const percentage = Math.min(100, Math.max(0, (progressInsideRange / range) * 100));
+        progressBar.style.width = `${percentage}%`;
+    } else {
+        progressText.innerHTML = `<span class="text-amber-500 font-bold">Dosáhl jsi vrcholu! 👑</span>`;
+        progressBar.style.width = '100%';
+    }
+    openModal('profile-modal');
+}
 
         // ============================================================
         // 15. MODÁLY A POMOCNÉ

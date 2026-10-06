@@ -465,8 +465,25 @@
         </div>
     </div>
 </div>
-
-    <!-- MODÁLNÍ OKNO: PROFIL -->
+    
+     <!-- MODÁLNÍ OKNO: DETAIL NOTIFIKACE -->
+<div id="notification-detail-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+            <h3 class="text-lg font-black flex items-center space-x-2">
+                <i class="fa-solid fa-envelope text-blue-400"></i>
+                <span>Detail zprávy</span>
+            </h3>
+            <button onclick="closeModal('notification-detail-modal')" class="text-slate-400 hover:text-white transition text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar" id="notification-detail-content">
+            <!-- Plní se dynamicky -->
+        </div>
+    </div>
+</div>
+<!-- MODÁLNÍ OKNO: PROFIL -->
     <div id="profile-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-slate-900 text-white p-6 relative">
@@ -2510,24 +2527,107 @@ async function markAllNotificationsRead() {
         alert('Chyba při označování zpráv.');
     }
 }
-async function handleNotificationClick(notificationId, videoId) {
+async function handleNotificationClick(notificationId) {
+    // Otevři detail notifikace
+    await showNotificationDetail(notificationId);
+}
+async function showNotificationDetail(notificationId) {
     try {
-        // 1. Označ jako přečtené
-        await supabaseClient
+        // Načti notifikaci
+        const { data: n, error } = await supabaseClient
             .from('notifications')
-            .update({ is_read: true })
-            .eq('id', notificationId);
+            .select('*')
+            .eq('id', notificationId)
+            .single();
         
-        // 2. Otevři detail videa
-        await viewDetail(videoId);
+        if (error || !n) {
+            alert('Zpráva nenalezena.');
+            return;
+        }
         
-        // 3. Znovu načti notifikace (aby zmizel modrý rámeček)
+        // Označ jako přečtené
+        if (!n.is_read) {
+            await supabaseClient
+                .from('notifications')
+                .update({ is_read: true })
+                .eq('id', notificationId);
+        }
+        
+        // Ikona a barva podle typu
+        let icon = '📬';
+        let iconColor = 'text-blue-500';
+        let bgColor = 'bg-blue-50 border-blue-200';
+        let typeName = 'Zpráva';
+        
+        if (n.type === 'delete_approved') {
+            icon = '✅';
+            iconColor = 'text-green-600';
+            bgColor = 'bg-green-50 border-green-200';
+            typeName = 'Schválení smazání';
+        } else if (n.type === 'delete_rejected') {
+            icon = '❌';
+            iconColor = 'text-red-600';
+            bgColor = 'bg-red-50 border-red-200';
+            typeName = 'Zamítnutí smazání';
+        } else if (n.type === 'video_deleted') {
+            icon = '📌';
+            iconColor = 'text-amber-600';
+            bgColor = 'bg-amber-50 border-amber-200';
+            typeName = 'Smazání návodu';
+        }
+        
+        const content = document.getElementById('notification-detail-content');
+        content.innerHTML = `
+            <div class="space-y-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${typeName}</span>
+                <h4 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                    <span class="${iconColor}">${icon}</span>
+                    ${n.title}
+                </h4>
+                <span class="text-[10px] text-slate-400 block">${new Date(n.created_at).toLocaleString('cs-CZ')}</span>
+            </div>
+            
+            <div class="${bgColor} border rounded-xl p-4">
+                <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">${n.message}</p>
+            </div>
+            
+            <div class="flex gap-2 pt-2 border-t border-slate-100">
+                <button onclick="deleteNotificationFromDetail(${n.id})" class="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash"></i> Smazat zprávu
+                </button>
+                <button onclick="closeModal('notification-detail-modal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs transition">
+                    Zavřít
+                </button>
+            </div>
+        `;
+        
+        // Aktualizuj notifikace (zmizí modrý rámeček)
         await renderNotifications();
+        
+        // Otevři modal
+        openModal('notification-detail-modal');
     } catch (err) {
-        console.error('Chyba při otevírání notifikace:', err);
+        console.error('Chyba při načítání detailu notifikace:', err);
+        alert('Chyba při načítání zprávy.');
     }
 }
 
+async function deleteNotificationFromDetail(notificationId) {
+    if (!confirm('Opravdu chceš smazat tuto zprávu?')) return;
+    
+    try {
+        await supabaseClient
+            .from('notifications')
+            .delete()
+            .eq('id', notificationId);
+        
+        await renderNotifications();
+        closeModal('notification-detail-modal');
+    } catch (err) {
+        console.error('Chyba při mazání notifikace:', err);
+        alert('Chyba při mazání zprávy.');
+    }
+}
 async function markNotificationRead(notificationId) {
     try {
         await supabaseClient
@@ -2628,8 +2728,7 @@ async function renderNotifications() {
             }
             
             // Pokud má related_id (související video), kliknutí otevře detail
-            const hasRelated = n.related_id && (n.type === 'delete_approved' || n.type === 'video_deleted');
-            const clickAction = hasRelated ? `onclick="handleNotificationClick(${n.id}, ${n.related_id})"` : `onclick="markNotificationRead(${n.id})"`;
+            const clickAction = `onclick="handleNotificationClick(${n.id})"`;
             const cursorClass = 'cursor-pointer hover:shadow-md';
             
             return `
@@ -2641,7 +2740,7 @@ async function renderNotifications() {
                         </span>
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] text-slate-400 whitespace-nowrap">${formatCommentDate(n.created_at)}</span>
-                            <button onclick="event.stopPropagation(); deleteNotification(${n.id})" class="text-slate-400 hover:text-red-500 text-xs font-bold transition" title="Smazat zprávu">×</button>
+                            <button onclick="event.stopPropagation(); deleteNotification(${n.id})" class="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-red-500 text-base font-bold transition" title="Smazat zprávu">×</button>
                         </div>
                     </div>
                     <p class="text-xs text-slate-600 leading-relaxed pl-5">${n.message}</p>

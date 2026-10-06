@@ -844,8 +844,23 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 levelNotifiedUsers[key] = true;
                 const reward = getRankByPoints(newPoints).reward;
                 
-                await addGiftRequest(userId, user.username, user.email, user.phone, user.address, oldRank, newRank, reward);
-                                console.log('🔍 addGiftRequest dokončeno');
+                                await addGiftRequest(userId, user.username, user.email, user.phone, user.address, oldRank, newRank, reward);
+                console.log('🔍 addGiftRequest dokončeno');
+                
+                // Vytvoř notifikaci pro uživatele
+                await createNotification(
+                    userId,
+                    'level_up',
+                    '🎉 Dosáhl/a jsi nové úrovně!',
+                    `Předchozí úroveň: ${oldRank}\nNová úroveň: ${newRank} 🎉\n\nOdměna: ${reward}\n\n📦 Dárek ti odešleme do 14 dnů od dosažení úrovně.`,
+                    null
+                );
+                
+                // Pokud je to aktuální uživatel, aktualizuj notifikace
+                if (currentUser.id === userId) {
+                    await renderNotifications();
+                }
+                
                 setTimeout(() => {
                     alert(`🎉 GRATULUJEME! DOSÁHL/A JSI NOVÉ ÚROVNĚ!
 
@@ -2569,11 +2584,16 @@ async function showNotificationDetail(notificationId) {
             iconColor = 'text-red-600';
             bgColor = 'bg-red-50 border-red-200';
             typeName = 'Zamítnutí smazání';
-        } else if (n.type === 'video_deleted') {
+                } else if (n.type === 'video_deleted') {
             icon = '📌';
             iconColor = 'text-amber-600';
             bgColor = 'bg-amber-50 border-amber-200';
             typeName = 'Smazání návodu';
+        } else if (n.type === 'level_up') {
+            icon = '🎉';
+            iconColor = 'text-purple-600';
+            bgColor = 'bg-purple-50 border-purple-200';
+            typeName = 'Nová úroveň';
         }
         
         const content = document.getElementById('notification-detail-content');
@@ -2721,10 +2741,14 @@ async function renderNotifications() {
                 icon = '❌';
                 iconColor = 'text-red-600';
                 bgColor = 'bg-red-50 border-red-200';
-            } else if (n.type === 'video_deleted') {
+                        } else if (n.type === 'video_deleted') {
                 icon = '📌';
                 iconColor = 'text-amber-600';
                 bgColor = 'bg-amber-50 border-amber-200';
+            } else if (n.type === 'level_up') {
+                icon = '🎉';
+                iconColor = 'text-purple-600';
+                bgColor = 'bg-purple-50 border-purple-200';
             }
             
             // Pokud má related_id (související video), kliknutí otevře detail

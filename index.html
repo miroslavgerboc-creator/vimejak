@@ -2678,7 +2678,9 @@ async function deleteNotification(notificationId) {
 }
 async function createNotification(userId, type, title, message, relatedId = null) {
     try {
-        const { error } = await supabaseClient
+        console.log('🔔 createNotification voláno:', { userId, type, title });
+        
+        const { data, error } = await supabaseClient
             .from('notifications')
             .insert({
                 user_id: userId,
@@ -2687,9 +2689,15 @@ async function createNotification(userId, type, title, message, relatedId = null
                 message: message,
                 related_id: relatedId,
                 is_read: false
-            });
+            })
+            .select();
         
-        if (error) throw error;
+        if (error) {
+            console.error('🔔 Chyba při vytváření notifikace:', error);
+            throw error;
+        }
+        
+        console.log('🔔 Notifikace vytvořena:', data);
     } catch (err) {
         console.error('Chyba při vytváření notifikace:', err);
     }

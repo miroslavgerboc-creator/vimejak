@@ -2415,16 +2415,19 @@ async function submitContent() {
 
 async function addGiftRequest(userId, username, email, phone, address, oldRank, newRank, reward) {
     try {
-        // Kontrola, zda už žádost neexistuje
+                // Kontrola, zda už žádost neexistuje (jakýkoliv stav - pending, sent, cancelled)
+        // Tím zajistíme, že uživatel dostane dárek jen jednou za danou úroveň
         const { data: existing } = await supabaseClient
             .from('gift_requests')
             .select('id')
             .eq('user_id', userId)
             .eq('new_rank', newRank)
-            .eq('status', 'pending')
             .maybeSingle();
         
-        if (existing) return;
+        if (existing) {
+            console.log('🎁 Žádost o dárek už existuje pro úroveň', newRank, '- nevytvářím novou');
+            return;
+        }
         
         // Vložit novou žádost
         const { error } = await supabaseClient

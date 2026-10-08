@@ -2564,23 +2564,6 @@ async function addGiftRequest(userId, username, email, phone, address, oldRank, 
         if (error) throw error;
         
         await renderGiftRequests();
-                // Najdi všechny adminy a pošli jim notifikaci
-        const { data: admins } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('role', 'admin');
-        
-        if (admins && admins.length > 0) {
-            for (const admin of admins) {
-                await createNotification(
-                    admin.id,
-                    'admin_gift_request',
-                    '🎁 Nová žádost o dárek',
-                    `Uživatel: ${username}\nÚroveň: ${oldRank} → ${newRank}\nOdměna: ${reward}`,
-                    null
-                );
-            }
-        }
     } catch (err) {
         console.error('Chyba při vytváření žádosti o dárek:', err);
     }
@@ -2742,11 +2725,6 @@ async function showNotificationDetail(notificationId) {
             iconColor = 'text-purple-600';
             bgColor = 'bg-purple-50 border-purple-200';
             typeName = 'Nová úroveň';
-        } else if (n.type === 'admin_gift_request') {
-            icon = '🎁';
-            iconColor = 'text-pink-600';
-            bgColor = 'bg-pink-50 border-pink-200';
-            typeName = 'Nová žádost o dárek';
         }
         
         const content = document.getElementById('notification-detail-content');
@@ -2910,10 +2888,6 @@ async function renderNotifications() {
                 icon = '🎉';
                 iconColor = 'text-purple-600';
                 bgColor = 'bg-purple-50 border-purple-200';
-            } else if (n.type === 'admin_gift_request') {
-                icon = '🎁';
-                iconColor = 'text-pink-600';
-                bgColor = 'bg-pink-50 border-pink-200';
             }
             
             // Pokud má related_id (související video), kliknutí otevře detail

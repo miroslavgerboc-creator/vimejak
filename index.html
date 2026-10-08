@@ -360,10 +360,21 @@
                     <input type="tel" id="reg-phone" required placeholder="Např. 123456789 nebo 420123456789" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none bg-slate-50 text-slate-800">
                     <span class="error-message hidden" id="reg-phone-error">Zadej platné telefonní číslo (9 číslic bez předvolby, např. 123456789, nebo 12 číslic s předvolbou, např. 420123456789)</span>
                 </div>
-                <div class="bg-amber-50 border border-amber-200/50 rounded-xl p-3 text-xs text-amber-800 flex gap-2">
+                                <div class="bg-amber-50 border border-amber-200/50 rounded-xl p-3 text-xs text-amber-800 flex gap-2">
                     <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 shrink-0"></i>
                     <span>Po registraci ti na zadanou adresu zašleme <strong>potvrzovací odkaz</strong>.</span>
                 </div>
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <label class="flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" id="reg-terms" class="mt-0.5 w-4 h-4 cursor-pointer accent-amber-500">
+                        <span class="text-xs text-slate-600 leading-relaxed">
+                            Souhlasím s <button type="button" onclick="openModal('terms-modal')" class="text-amber-600 hover:underline font-bold">obchodními podmínkami</button> 
+                            a se <button type="button" onclick="openModal('gdpr-modal')" class="text-amber-600 hover:underline font-bold">zpracováním osobních údajů</button>.
+                        </span>
+                    </label>
+                </div>
+                
                 <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl transition text-sm shadow-md">Registrovat se</button>
             </form>
         </div>
@@ -483,6 +494,104 @@
         </div>
     </div>
 </div>
+<!-- MODÁLNÍ OKNO: OBCHODNÍ PODMÍNKY -->
+<div id="terms-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+            <h3 class="text-lg font-black flex items-center space-x-2">
+                <i class="fa-solid fa-file-contract text-amber-400"></i>
+                <span>Obchodní podmínky</span>
+            </h3>
+            <button onclick="closeModal('terms-modal')" class="text-slate-400 hover:text-white transition text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar text-sm text-slate-700 leading-relaxed">
+            <h4 class="font-black text-slate-900 text-base">1. Úvodní ustanovení</h4>
+            <p>Tyto obchodní podmínky upravují používání webové aplikace VÍME JAK (dále jen „web") a práva a povinnosti uživatelů.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">2. Registrace uživatele</h4>
+            <p>Registrací uživatel souhlasí s těmito podmínkami a se zpracováním osobních údajů. Uživatel je povinen uvádět pravdivé údaje.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">3. Obsah a odpovědnost</h4>
+            <p>Uživatelé vkládají vlastní návody a obsah. Provozovatel neodpovídá za správnost uživatelských příspěvků. Provozovatel si vyhrazuje právo odstranit obsah, který porušuje pravidla.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">4. Systém odměn a bodů</h4>
+            <p>Provozovatel může poskytovat uživatelům odměny za dosažení určitých úrovní. Poskytnutí odměny je dobrovolné a nepředstavuje nárokovatelné plnění. Provozovatel si vyhrazuje právo kdykoliv změnit, omezit nebo zrušit systém odměn. Odměna je poskytnuta maximálně jednou za danou úroveň. Provozovatel může odmítnout poskytnutí odměny v případě podezření na zneužití systému. Odměny nelze vymáhat soudně.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">5. Zákaz zneužití</h4>
+            <p>Je zakázáno spamovat, vkládat nevhodný obsah nebo jinak zneužívat web. Provozovatel si vyhrazuje právo zablokovat uživatele, který porušuje pravidla.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">6. Změny podmínek</h4>
+            <p>Provozovatel může kdykoliv změnit tyto podmínky. Uživatelé budou o změnách informováni na webu.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">7. Závěrečná ustanovení</h4>
+            <p>Tyto podmínky nabývají účinnosti dnem registrace uživatele. V případě nejasností kontaktujte provozovatele.</p>
+        </div>
+    </div>
+</div>
+
+<!-- MODÁLNÍ OKNO: GDPR -->
+<div id="gdpr-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div class="bg-slate-900 text-white p-5 flex justify-between items-center">
+            <h3 class="text-lg font-black flex items-center space-x-2">
+                <i class="fa-solid fa-shield-halved text-amber-400"></i>
+                <span>Ochrana osobních údajů (GDPR)</span>
+            </h3>
+            <button onclick="closeModal('gdpr-modal')" class="text-slate-400 hover:text-white transition text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar text-sm text-slate-700 leading-relaxed">
+            <h4 class="font-black text-slate-900 text-base">1. Správce osobních údajů</h4>
+            <p>Správcem osobních údajů je provozovatel webu VÍME JAK.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">2. Jaké údaje zpracováváme</h4>
+            <p>Zpracováváme tyto osobní údaje:</p>
+            <ul class="list-disc list-inside space-y-1 pl-2">
+                <li>Uživatelské jméno</li>
+                <li>E-mailová adresa</li>
+                <li>Adresa pro doručení dárků</li>
+                <li>Telefonní číslo</li>
+                <li>Údaje o aktivitě (body, úrovně, příspěvky)</li>
+            </ul>
+            
+            <h4 class="font-black text-slate-900 text-base">3. Účel zpracování</h4>
+            <p>Osobní údaje zpracováváme pro účely:</p>
+            <ul class="list-disc list-inside space-y-1 pl-2">
+                <li>Poskytování služeb webu</li>
+                <li>Doručení odměn (dárků)</li>
+                <li>Komunikace s uživateli</li>
+                <li>Zlepšování služeb</li>
+            </ul>
+            
+            <h4 class="font-black text-slate-900 text-base">4. Právní základ</h4>
+            <p>Zpracování je založeno na souhlasu uživatele (čl. 6 odst. 1 písm. a) GDPR) a na plnění smlouvy (čl. 6 odst. 1 písm. b) GDPR).</p>
+            
+            <h4 class="font-black text-slate-900 text-base">5. Doba uchovávání</h4>
+            <p>Osobní údaje uchováváme po dobu existence uživatelského účtu. Po smazání účtu budou údaje vymazány.</p>
+            
+            <h4 class="font-black text-slate-900 text-base">6. Vaše práva</h4>
+            <p>Máte právo na:</p>
+            <ul class="list-disc list-inside space-y-1 pl-2">
+                <li>Přístup ke svým údajům</li>
+                <li>Opravu nepřesných údajů</li>
+                <li>Výmaz údajů (právo být zapomenut)</li>
+                <li>Omezení zpracování</li>
+                <li>Přenositelnost údajů</li>
+                <li>Odvolání souhlasu</li>
+            </ul>
+            
+            <h4 class="font-black text-slate-900 text-base">7. Zabezpečení</h4>
+            <p>Osobní údaje jsou zabezpečeny proti neoprávněnému přístupu. Používáme šifrované připojení (HTTPS) a bezpečné úložiště (Supabase).</p>
+            
+            <h4 class="font-black text-slate-900 text-base">8. Kontakt</h4>
+            <p>V případě dotazů ohledně ochrany osobních údajů nás kontaktujte na e-mailu uvedeném na webu.</p>
+        </div>
+    </div>
+</div>
+
 <!-- MODÁLNÍ OKNO: PROFIL -->
     <div id="profile-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden">
@@ -902,6 +1011,13 @@ Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
     const password = document.getElementById('reg-password').value;
     const address = document.getElementById('reg-address').value.trim();
     const phone = document.getElementById('reg-phone').value.trim();
+    const termsAccepted = document.getElementById('reg-terms').checked;
+    
+    // Kontrola souhlasu s VOP a GDPR
+    if (!termsAccepted) {
+        alert('⚠️ Pro registraci musíš souhlasit s obchodními podmínkami a zpracováním osobních údajů.');
+        return;
+    }
     
     // Validace
     let isValid = true;
@@ -996,6 +1112,7 @@ Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
         document.getElementById('reg-password').value = '';
         document.getElementById('reg-address').value = '';
         document.getElementById('reg-phone').value = '';
+        document.getElementById('reg-terms').checked = false;
         
         closeModal('auth-modal');
     } catch (err) {

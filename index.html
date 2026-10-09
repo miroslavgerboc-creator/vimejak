@@ -457,14 +457,27 @@
     </div>
 </div>
 <div>
-    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 mt-3">Odkazy na fotky (min. 3, neomezeně)</label>
-        <div id="image-fields-container" class="space-y-2">
+    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 mt-3">Fotky návodu</label>
+    
+    <!-- Nahrání z PC/mobilu -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-2">
+        <p class="text-xs text-blue-800 mb-2 font-medium">📷 Nahraj fotky z počítače nebo mobilu:</p>
+        <input type="file" id="form-image-upload" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event)">
+        <button type="button" onclick="document.getElementById('form-image-upload').click()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Vybrat fotky z počítače</span>
+        </button>
+        <p class="text-[10px] text-blue-600 mt-2 text-center">Nebo vlož URL adresu ručně níže</p>
+    </div>
+    
+    <label class="block text-xs font-bold text-slate-500 uppercase mb-1 mt-3">Odkazy na fotky (URL)</label>
+    <div id="image-fields-container" class="space-y-2">
         <input type="text" id="form-image-url-1" placeholder="Odkaz na 1. fotku (https://...)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs">
         <input type="text" id="form-image-url-2" placeholder="Odkaz na 2. fotku (https://...)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs">
         <input type="text" id="form-image-url-3" placeholder="Odkaz na 3. fotku (https://...)" class="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs">
     </div>
     <button type="button" onclick="addImageField()" class="mt-2 w-full bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold transition">
-        + Přidat další fotku
+        + Přidat další fotku (URL)
     </button>
 </div>
                 </div>
@@ -2406,6 +2419,117 @@ async function renderFullLeaderboard(query = '') {
         // ============================================================
 // PŘIDÁNÍ DALŠÍHO POLE PRO FOTKU
 // ============================================================
+async function handleImageUpload(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Najdi kontejner pro URL pole
+    const container = document.getElementById('image-fields-container');
+    if (!container) return;
+    
+    // Zobraz info o nahrávání
+    const uploadBtn = document.querySelector('button[onclick*="form-image-upload"]');
+    const originalText = uploadBtn.innerHTML;
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Nahrávám...</span>';
+    
+    let uploadedCount = 0;
+    let errorCount = 0;
+    
+    try {
+        for (const file of files) {
+            try {
+                // Zkontroluj, že je to obrázek
+                if (!file.type.startsWith('image/')) {
+                    errorCount++;
+                    continue;
+                }
+                
+                // Zkontroluj velikost (max 5 MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`Fotka "${file.name}" je příliš velká (max 5 MB).`);
+                    errorCount++;
+                    continue;
+                }
+                
+                // Vytvoř unikátní název souboru
+                const ext = file.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+                const filePath = `${currentUser.id}/${fileName}`;
+                
+                // Nahraj na Supabase Storage
+                const { data, error } = await supabaseClient.storage
+                    .from('vimejak-images')
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+                
+                if (error) {
+                    console.error('Chyba při nahrávání:', error);
+                    errorCount++;
+                    continue;
+                }
+                
+                // Získej veřejnou URL
+                const { data: urlData } = supabaseClient.storage
+                    .from('vimejak-images')
+                    .getPublicUrl(filePath);
+                
+                const publicUrl = urlData.publicUrl;
+                
+                // Přidej URL do volného pole (nebo vytvoř nové)
+                addImageUrlToField(publicUrl);
+                uploadedCount++;
+            } catch (err) {
+                console.error('Chyba při zpracování souboru:', err);
+                errorCount++;
+            }
+        }
+        
+        // Zobraz výsledek
+        if (uploadedCount > 0) {
+            alert(`✅ Nahráno ${uploadedCount} fotek.${errorCount > 0 ? ` ${errorCount} selhalo.` : ''}`);
+        } else if (errorCount > 0) {
+            alert(`❌ Nahrávání selhalo (${errorCount} chyb).`);
+        }
+    } catch (err) {
+        console.error('Chyba při nahrávání:', err);
+        alert('Chyba při nahrávání fotek.');
+    } finally {
+        // Obnov tlačítko
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = originalText;
+        // Vymaž input (aby šlo nahrát stejný soubor znovu)
+        event.target.value = '';
+    }
+}
+
+function addImageUrlToField(url) {
+    const container = document.getElementById('image-fields-container');
+    if (!container) return;
+    
+    // Najdi první prázdné URL pole
+    const inputs = container.querySelectorAll('input[type="text"]');
+    let filled = false;
+    
+    for (const input of inputs) {
+        if (!input.value.trim()) {
+            input.value = url;
+            filled = true;
+            break;
+        }
+    }
+    
+    // Pokud jsou všechna pole plná, vytvoř nové
+    if (!filled) {
+        const newField = document.createElement('input');
+        newField.type = 'text';
+        newField.value = url;
+        newField.className = 'w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:ring-1 focus:ring-amber-500 focus:outline-none text-xs';
+        container.appendChild(newField);
+    }
+}
 function addImageField() {
     const container = document.getElementById('image-fields-container');
     if (!container) return;

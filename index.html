@@ -2546,7 +2546,103 @@ async function handleImageUpload(event) {
         event.target.value = '';
     }
 }
+async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Zkontroluj, že je to obrázek
+    if (!file.type.startsWith('image/')) {
+        alert('Musíš vybrat obrázek.');
+        return;
+    }
+    
+    // Zkontroluj velikost (max 5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Fotka je příliš velká (max 5 MB).');
+        return;
+    }
+    
+    // Zkontroluj, že je uživatel přihlášený
+    if (!currentUser.id) {
+        alert('Musíš být přihlášený.');
+        return;
+    }
+    
+    // Zobraz info o nahrávání
+    const avatarImg = document.getElementById('profile-avatar-img');
+    const originalSrc = avatarImg.src;
+    avatarImg.style.opacity = '0.5';
+    
+    try {
+        // Vytvoř unikátní název souboru
+        const ext = file.name.split('.').pop();
+        const fileName = `avatar-${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+        const filePath = `avatars/${currentUser.id}/${fileName}`;
+        
+        // Nahraj na Supabase Storage
+        const { data, error } = await supabaseClient.storage
+            .from('vimejak-images')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+        
+        if (error) {
+            console.error('Chyba při nahrávání avatara:', error);
+            alert('Chyba při nahrávání avatara.');
+            avatarImg.style.opacity = '1';
+            return;
+        }
+        
+        // Získej veřejnou URL
+        const { data: urlData } = supabaseClient.storage
+            .from('vimejak-images')
+            .getPublicUrl(filePath);
+        
+        const publicUrl = urlData.publicUrl;
+        
+        // Ulož URL do profilu v DB
+        const { error: updateError } = await supabaseClient
+            .from('profiles')
+            .update({ avatar_url: publicUrl })
+            .eq('id', currentUser.id);
+        
+        if (updateError) {
+            console.error('Chyba při ukládání avatara:', updateError);
+            alert('Chyba při ukládání avatara.');
+            avatarImg.style.opacity = '1';
+            return;
+        }
+        
+        // Aktualizuj avatar v modalu
+        avatarImg.src = publicUrl;
+        avatarImg.style.opacity = '1';
+        
+        // Aktualizuj avatar v hlavičce
+        updateHeaderAvatar(publicUrl);
+        
+        // Ulož do localStorage
+        currentUser.avatar_url = publicUrl;
+        localStorage.setItem('vimejak_user', JSON.stringify(currentUser));
+        
+        alert('✅ Avatar byl úspěšně změněn!');
+    } catch (err) {
+        console.error('Chyba při nahrávání avatara:', err);
+        alert('Chyba při nahrávání avatara.');
+        avatarImg.style.opacity = '1';
+    } finally {
+        // Vymaž input (aby šlo nahrát stejný soubor znovu)
+        event.target.value = '';
+    }
+}
 
+function updateHeaderAvatar(url) {
+    // Najdi avatar v hlavičce
+    const headerAvatar = document.querySelector('header img[alt="Avatar"]');
+    if (headerAvatar && url) {
+        headerAvatar.src = url;
+    }
+}
 function addImageUrlToField(url) {
     const container = document.getElementById('image-fields-container');
     if (!container) return;

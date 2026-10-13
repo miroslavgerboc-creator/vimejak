@@ -1214,7 +1214,7 @@ Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
             return;
         }
         
-        // 3. Nastavení aktuálního uživatele
+               // 3. Nastavení aktuálního uživatele
         currentUser = {
             id: data.user.id,
             name: profile.username,
@@ -1222,8 +1222,14 @@ Děkujeme, že jsi součástí komunity VÍME JAK! 🚀`);
             points: profile.points,
             address: profile.address,
             phone: profile.phone,
-            role: profile.role || 'user'
+            role: profile.role || 'user',
+            avatar_url: profile.avatar_url || null
         };
+        
+        // Aktualizuj avatar v hlavičce
+        if (profile.avatar_url) {
+            updateHeaderAvatar(profile.avatar_url);
+        }
         
         // 4. Uložit do localStorage (aby session přežila F5)
         localStorage.setItem('vimejak_user', JSON.stringify(currentUser));
@@ -2375,7 +2381,10 @@ async function renderFullLeaderboard(query = '') {
     const pts = currentUser.points;
     document.getElementById('profile-username').textContent = currentUser.name;
     document.getElementById('profile-points').textContent = pts;
-    
+        // Aktualizuj avatar v profilu
+    if (currentUser.avatar_url) {
+        document.getElementById('profile-avatar-img').src = currentUser.avatar_url;
+    }
     // Načti počet videí uživatele ze Supabase
     try {
         const { count } = await supabaseClient
@@ -3329,7 +3338,7 @@ if (!saved) {
             .eq('id', session.user.id)
             .single();
         
-        if (profile) {
+                if (profile) {
             currentUser = {
                 id: profile.id,
                 name: profile.username,
@@ -3337,7 +3346,8 @@ if (!saved) {
                 points: profile.points,
                 address: profile.address,
                 phone: profile.phone,
-                role: profile.role || 'user'
+                role: profile.role || 'user',
+                avatar_url: profile.avatar_url || null
             };
             
             localStorage.setItem('vimejak_user', JSON.stringify(currentUser));
@@ -3346,7 +3356,13 @@ if (!saved) {
             document.getElementById('header-username').textContent = currentUser.name;
             document.getElementById('header-points').textContent = currentUser.points + ' b.';
             document.getElementById('user-rank-badge').textContent = getRankNameByPoints(currentUser.points);
-                        updateUIForUser();
+            
+            // Aktualizuj avatar v hlavičce
+            if (profile.avatar_url) {
+                updateHeaderAvatar(profile.avatar_url);
+            }
+            
+            updateUIForUser();
         }
     } catch (err) {
         console.error('Chyba při obnovení session:', err);

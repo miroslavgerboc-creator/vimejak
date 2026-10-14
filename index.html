@@ -280,13 +280,21 @@
 </div>
                 
                 <div class="section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
-                    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
-                        <span class="text-amber-500"><i class="fa-solid fa-gift"></i></span>
-                        <span class="font-bold text-slate-800">Úrovně a výhody</span>
-                    </h3>
-                    <div class="space-y-3" id="levels-list"></div>
-                </div>
-
+    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+        <span class="text-amber-500"><i class="fa-solid fa-gift"></i></span>
+        <span class="font-bold text-slate-800">Úrovně a výhody</span>
+    </h3>
+    <div class="space-y-3" id="levels-list"></div>
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3">
+        <p class="text-[10px] text-slate-500 leading-relaxed">
+            <strong class="text-slate-700">ℹ️ Informace o úrovních:</strong><br>
+            • <strong>Partner</strong> může být pouze <strong>jeden</strong> — první uživatel, který dosáhne 500 000 bodů a <strong>souhlasí se správou webu</strong>. Podmínkou je osobní setkání a sepsání smlouvy o spolupráci.<br>
+            • <strong>Legenda</strong> a <strong>Partner</strong> mají <strong>web bez reklam</strong>.<br>
+            • <strong>Legenda</strong> může přímo mazat návody (nejen žádat o smazání).<br>
+            • <strong>Partner</strong> má stejná práva jako Admin (mazání, schvalování, správa).
+        </p>
+    </div>
+</div>
                 <div class="section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
                     <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
                         <span class="text-amber-500"><i class="fa-solid fa-trophy"></i></span>
@@ -791,11 +799,14 @@
 const SUPABASE_URL = 'https://rynppuneqrnapsyplmlv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_up1TsVGS-HlNhC4gS3NjxA_8xW1nYao';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const rankDefinitions = [
+            const rankDefinitions = [
             { name: "Nováček", min: 0, max: 4999, reward: "Základní přístup", icon: "fa-seedling", iconColor: "text-emerald-600", borderStyle: "border-l-[5px] border-l-[#a3e635]", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-            { name: "Mazák", min: 5000, max: 14999, reward: "Propiska s logem", icon: "fa-screwdriver-wrench", iconColor: "text-blue-500", borderStyle: "border-l-[5px] border-l-[#60a5fa]", badgeColor: "bg-blue-50 text-blue-700 border-blue-100" },
-            { name: "Guru", min: 15000, max: 29999, reward: "Tričko a hrníček s logem", icon: "fa-gear", iconColor: "text-teal-600", borderStyle: "border-l-[5px] border-l-[#2dd4bf]", badgeColor: "bg-teal-50 text-teal-700 border-teal-100" },
-            { name: "Legenda", min: 30000, max: Infinity, reward: "Gola sada + web bez reklam + možnost žádat o smazání", icon: "fa-star", iconColor: "text-amber-500", borderStyle: "border-l-[5px] border-l-[#facc15]", badgeColor: "bg-amber-50 text-amber-700 border-amber-100" }
+            { name: "Kutil", min: 5000, max: 9999, reward: "Odznak Kutil", icon: "fa-screwdriver", iconColor: "text-sky-500", borderStyle: "border-l-[5px] border-l-[#38bdf8]", badgeColor: "bg-sky-50 text-sky-700 border-sky-100" },
+            { name: "Mazák", min: 10000, max: 29999, reward: "Propiska s logem", icon: "fa-screwdriver-wrench", iconColor: "text-orange-500", borderStyle: "border-l-[5px] border-l-[#fb923c]", badgeColor: "bg-orange-50 text-orange-700 border-orange-100" },
+            { name: "Guru", min: 30000, max: 49999, reward: "Hrníček s logem", icon: "fa-gear", iconColor: "text-teal-600", borderStyle: "border-l-[5px] border-l-[#2dd4bf]", badgeColor: "bg-teal-50 text-teal-700 border-teal-100" },
+            { name: "Mistr", min: 50000, max: 99999, reward: "Gola sada", icon: "fa-award", iconColor: "text-fuchsia-600", borderStyle: "border-l-[5px] border-l-[#e879f9]", badgeColor: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100" },
+            { name: "Legenda", min: 100000, max: 499999, reward: "Web bez reklam + tričko s logem + právo žádat o smazání", icon: "fa-star", iconColor: "text-indigo-600", borderStyle: "border-l-[5px] border-l-[#818cf8]", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+            { name: "Partner", min: 500000, max: Infinity, reward: "Web bez reklam + 5 % ze zisku + stejná práva jako Admin ", icon: "fa-crown", iconColor: "text-amber-500", borderStyle: "border-l-[5px] border-l-[#facc15]", badgeColor: "bg-amber-50 text-amber-700 border-amber-100" }
         ];
 
         // ============================================================
@@ -888,12 +899,12 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         // ============================================================
         // 4. KATEGORIE
         // ============================================================
-        const categories = [
+                const categories = [
             { id: "elektro", name: "Elektro a Energie", icon: "fa-bolt", bg: "bg-amber-100 text-amber-500", border: "border-slate-100", subcategories: ["Zásuvky", "Osvětlení", "Solární panely", "Smart Home", "Spotřebiče"] },
             { id: "vodovod", name: "Voda, Topení a Odpady", icon: "fa-droplet", bg: "bg-blue-100 text-blue-500", border: "border-slate-100", subcategories: ["Kohoutky", "Kanalizace", "Radiátory", "Závity"] },
             { id: "domacnost", name: "Domov a Interiér", icon: "fa-house", bg: "bg-emerald-100 text-emerald-500", border: "border-slate-100", subcategories: ["Nábytek DIY", "Malování stěn", "Úklidové triky"] },
+            { id: "auto", name: "Auto-Moto a Garáž", icon: "fa-car", bg: "bg-gray-100 text-gray-600", border: "border-slate-100", subcategories: ["Výměna kapalin", "Pneumatiky", "Brzdy"] },
             { id: "zahrada", name: "Zahrada a Okolí", icon: "fa-leaf", bg: "bg-green-100 text-green-500", border: "border-slate-100", subcategories: ["Trávník", "Pěstování", "Zavlažování"] },
-            { id: "auto", name: "Auto-Moto a Garáž", icon: "fa-car", bg: "bg-slate-800 text-white", border: "border-slate-100", subcategories: ["Výměna kapalin", "Pneumatiky", "Brzdy"] },
             { id: "kemping", name: "Cestování a Outdoor", icon: "fa-compass", bg: "bg-purple-100 text-purple-500", border: "border-slate-100", subcategories: ["Kempování", "Přežití", "Výbava"] },
             { id: "vareni", name: "Vaření a Pečení", icon: "fa-utensils", bg: "bg-rose-100 text-rose-500", border: "border-slate-100", subcategories: ["Tradiční česká", "Rychlá jídla", "Sladké"] },
             { id: "fitness", name: "Sport, Fitness a Zdraví", icon: "fa-dumbbell", bg: "bg-orange-100 text-orange-500", border: "border-slate-100", subcategories: ["Cvičení", "Běh", "Strava"] },
@@ -1857,7 +1868,7 @@ function formatCommentDate(isoString) {
     // Kontrola úrovně Legenda
     const userRank = getRankNameByPoints(currentUser.points);
     if (userRank !== 'Legenda') {
-        alert('⚠️ Tuto funkci může používat pouze uživatel na úrovni LEGENDA (30 000+ bodů)!');
+        alert('⚠️ Tuto funkci může používat pouze uživatel na úrovni LEGENDA (100 000+ bodů)!');
         return;
     }
     
@@ -2254,7 +2265,7 @@ async function rejectDelete(requestId) {
             const userPoints = currentUser.points;
             rankDefinitions.forEach(rank => {
                 const isCurrent = getRankNameByPoints(userPoints) === rank.name;
-                const rangeText = rank.max === Infinity ? '30 000+ bodů' : `${formatPoints(rank.min)}–${formatPoints(rank.max)} bodů`;
+                          const rangeText = rank.max === Infinity ? `${formatPoints(rank.min)}+ bodů` : `${formatPoints(rank.min)}–${formatPoints(rank.max)} bodů`;
                 const card = document.createElement('div');
                 card.className = `flex items-center p-3 rounded-2xl border bg-[#fcfdfe] relative ${rank.borderStyle} ${isCurrent ? 'ring-2 ring-amber-500/20 shadow-sm' : 'border-slate-100 hover:border-slate-200 shadow-sm'}`;
                 card.innerHTML = `

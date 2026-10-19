@@ -2412,7 +2412,7 @@ async function renderFullLeaderboard(query = '') {
     document.getElementById('profile-rank-tag').textContent = currentRank ? currentRank.name : 'Nováček';
     const rewardsContainer = document.getElementById('profile-rewards');
     if (currentRank) {
-        const allRanks = rankDefinitions.filter(r => r.max <= pts || (r.max === Infinity && pts >= r.min));
+        const allRanks = rankDefinitions.filter(r => r.min <= pts);
         if (allRanks.length > 0) {
             rewardsContainer.innerHTML = allRanks.map(r => `<div class="flex items-center gap-2 py-0.5"><span class="text-amber-500"><i class="fa-solid fa-check-circle"></i></span><span><strong>${r.name}:</strong> ${r.reward}</span></div>`).join('');
         } else {

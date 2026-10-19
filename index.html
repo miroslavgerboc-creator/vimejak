@@ -72,7 +72,7 @@
 
     <!-- HLAVIČKA WEBU -->
     <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm w-full">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
                 <div class="bg-amber-500 text-white p-2.5 rounded-xl shadow-md shadow-amber-500/20">
                     <i class="fa-solid fa-lightbulb text-xl"></i>
@@ -128,10 +128,10 @@
     <!-- HERO BANNER -->
     <section class="w-full bg-[#0f172a] text-white py-10 lg:py-12 relative overflow-hidden flex flex-col items-center">
         <div class="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-        <div class="max-w-7xl mx-auto px-4 space-y-6 relative z-10 w-full">
+        <div class="max-w-[1600px] mx-auto px-4 space-y-6 relative z-10 w-full">
             
             <!-- Horní řada: Krok 1 | Text | Krok 2 -->
-            <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1.6fr_1.2fr] gap-6 items-stretch">
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-6 items-stretch">
                 
                 <!-- Krok 1 (vlevo) -->
                 <div class="bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl text-center space-y-3 order-2 lg:order-1 h-full">
@@ -186,7 +186,7 @@
 
     <!-- KATEGORIE A NÁPOVĚDA -->
     <section class="bg-white border-b border-slate-100 py-10 w-full flex flex-col items-center shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-8">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-8">
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-black text-slate-900 flex items-center space-x-2">
                     <span class="text-amber-500"><i class="fa-solid fa-shapes"></i></span>
@@ -202,151 +202,136 @@
         </div>
     </section>
 
-    <!-- HLAVNÍ OBSAH -->
-    <main class="max-w-7xl px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full flex justify-center">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 w-full">
-                        <div class="lg:col-span-2 space-y-6 flex flex-col">
-                <div class="flex items-center justify-between border-b border-slate-200 pb-4">
-                    <div class="space-y-1">
-                        <h3 class="text-lg font-black text-slate-900" id="feed-title">Poslední přidané tipy a návody</h3>
-                        <p class="text-xs text-slate-400 font-medium" id="search-results-counter">Zobrazeno všech 8 návodů</p>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button onclick="sortFeed('latest')" id="sort-latest" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-950 text-white transition">Nejnovější</button>
-                        <button onclick="sortFeed('popular')" id="sort-popular" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Nejoblíbenější</button>
-                    </div>
+    <main class="max-w-[1600px] px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full flex justify-center">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 w-full">
+        
+        <!-- 1. a 2. SLOUPEC: NÁVODY -->
+        <div class="lg:col-span-2 space-y-6 flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                <div class="space-y-1">
+                    <h3 class="text-lg font-black text-slate-900" id="feed-title">Poslední přidané tipy a návody</h3>
+                    <p class="text-xs text-slate-400 font-medium" id="search-results-counter">Zobrazeno všech 8 návodů</p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" id="video-feed"></div>
-                <div class="flex items-center justify-between border-t border-slate-200 pt-6" id="pagination-controls"></div>
-                
-                                <!-- 📢 REKLAMA - POD STATISTIKAMI -->
-                <div id="ad-sidebar-container" class="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-dashed border-amber-300 rounded-2xl p-4 shadow-sm mt-4 flex flex-col justify-center flex-1">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">📢 Reklama</span>
+                <div class="flex space-x-2">
+                    <button onclick="sortFeed('latest')" id="sort-latest" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-950 text-white transition">Nejnovější</button>
+                    <button onclick="sortFeed('popular')" id="sort-popular" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Nejoblíbenější</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6" id="video-feed"></div>
+            <div class="flex items-center justify-between border-t border-slate-200 pt-6" id="pagination-controls"></div>
+        </div>
+
+        <!-- 3. SLOUPEC: ŽEBŘÍČEK + STATISTIKY + ZPRÁVY + ADMIN -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Zprávy -->
+            <div id="notifications-panel" class="hidden section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
+                <h3 class="font-bold text-slate-950 text-base flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-blue-500"><i class="fa-solid fa-envelope"></i></span>
+                        <span class="font-bold text-slate-800">Zprávy</span>
+                        <span id="notifications-count" class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                     </div>
-                    <div class="bg-white rounded-xl p-4 text-center space-y-2">
-                        <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center text-3xl mx-auto">
-                            🛠️
-                        </div>
-                        <h4 class="font-black text-slate-800 text-sm">Nářadí pro kutily</h4>
-                        <p class="text-xs text-slate-500">Sleva 20 % na celý sortiment!</p>
-                        <button class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
-                            Zjistit více →
-                        </button>
-                        <span class="text-[9px] text-slate-400 block">alza.cz</span>
-                    </div>
+                    <button onclick="markAllNotificationsRead()" class="text-[10px] font-bold text-blue-500 hover:underline transition">Označit vše</button>
+                </h3>
+                <div id="notifications-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar text-sm"></div>
+            </div>
+
+            <!-- Žebříček -->
+            <div class="section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
+                <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+                    <span class="text-amber-500"><i class="fa-solid fa-trophy"></i></span>
+                    <span class="font-bold text-slate-800">Žebříček</span>
+                </h3>
+                <div class="space-y-3" id="leaderboard-preview"></div>
+                <div class="text-center pt-2 border-t border-slate-100">
+                    <button onclick="openModal('all-leaderboard-modal')" class="text-xs font-bold text-amber-500 hover:underline transition">Zobrazit celý &rarr;</button>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                                <!-- 📬 PANEL ZPRÁVY (vidí všichni přihlášení) -->
-                                <div id="notifications-panel" class="hidden section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
-                    <h3 class="font-bold text-slate-950 text-base flex items-center justify-between border-b border-slate-100 pb-3">
-                        <div class="flex items-center space-x-2">
-                            <span class="text-blue-500"><i class="fa-solid fa-envelope"></i></span>
-                            <span class="font-bold text-slate-800">Zprávy</span>
-                            <span id="notifications-count" class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
-                        </div>
-                        <button onclick="markAllNotificationsRead()" class="text-[10px] font-bold text-blue-500 hover:underline transition">Označit vše jako přečtené</button>
-                    </h3>
-                    <div id="notifications-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar text-sm"></div>
+            <!-- Statistiky -->
+            <div class="section-card bg-white border border-slate-200/80 rounded-xl px-4 py-3 shadow-sm">
+                <div class="flex items-center justify-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                    <i class="fa-solid fa-chart-simple text-blue-400 text-xs"></i>
+                    <span class="text-xs font-bold text-slate-600">Statistiky</span>
+                </div>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] text-slate-500">
+                    <div class="flex items-center gap-1.5"><span>👀</span><strong id="stats-today" class="text-slate-800">0</strong><span>Návštěvy dnes</span></div>
+                    <div class="flex items-center gap-1.5"><span>🟢</span><strong id="stats-online" class="text-blue-600">0</strong><span>Online</span></div>
+                    <div class="flex items-center gap-1.5"><span>👤</span><strong id="stats-users" class="text-green-600">0</strong><span>Uživatelů</span></div>
+                    <div class="flex items-center gap-1.5"><span>📊</span><strong id="stats-total" class="text-slate-700">0</strong><span>Celkem návštěv</span></div>
+                </div>
+            </div>
+
+            <!-- Admin panel -->
+            <div id="admin-panel" class="bg-white border-2 border-amber-500/50 rounded-2xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+                    <span class="text-amber-500"><i class="fa-solid fa-flag"></i></span>
+                    <span class="font-bold text-slate-800">Požadavky na smazání</span>
+                    <span id="delete-requests-count" class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
+                </h3>
+                <div id="delete-requests-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm"></div>
+                <div class="text-center pt-2 border-t border-slate-100">
+                    <button onclick="openModal('admin-requests-modal')" class="text-xs font-bold text-amber-500 hover:underline transition">Spravovat &rarr;</button>
                 </div>
                 
-                <div id="admin-panel" class="bg-white border-2 border-amber-500/50 rounded-2xl p-5 shadow-sm space-y-4">
-    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
-        <span class="text-amber-500"><i class="fa-solid fa-flag"></i></span>
-        <span class="font-bold text-slate-800">Požadavky na smazání</span>
-        <span id="delete-requests-count" class="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
-    </h3>
-    <div id="delete-requests-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm"></div>
-    <div class="text-center pt-2 border-t border-slate-100">
-        <button onclick="openModal('admin-requests-modal')" class="text-xs font-bold text-amber-500 hover:underline transition">Spravovat požadavky &rarr;</button>
-   </div>
-    
-    <!-- 🆕 NOVÁ SEKCE: Žádosti o odeslání dárků -->
-    <div class="border-t border-slate-200 pt-3 mt-3">
-        <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 pb-2">
-            <span class="text-green-500"><i class="fa-solid fa-gift"></i></span>
-            <span class="font-bold text-slate-800">Žádosti o odeslání dárků</span>
-            <span id="gift-requests-count" class="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
-        </h3>
-        <div id="gift-requests-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm">
-            <!-- Dynamicky -->
-        </div>
-        <div class="text-center pt-2 border-t border-slate-100">
-            <button onclick="openModal('gift-requests-modal')" class="text-xs font-bold text-green-500 hover:underline transition">Spravovat žádosti &rarr;</button>
-        </div>
-    </div>
-</div>
-                
-                <div class="section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
-    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
-        <span class="text-amber-500"><i class="fa-solid fa-gift"></i></span>
-        <span class="font-bold text-slate-800">Úrovně a výhody</span>
-    </h3>
-    <div class="space-y-3" id="levels-list"></div>
-    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3">
-        <p class="text-[10px] text-slate-500 leading-relaxed">
-            <strong class="text-slate-700">ℹ️ Informace o úrovních:</strong><br>
-            • <strong>Partner</strong> může být pouze <strong>jeden</strong> — první uživatel, který dosáhne 500 000 bodů a <strong>souhlasí se správou webu</strong>. Podmínkou je osobní setkání a sepsání smlouvy o spolupráci.<br>
-            • <strong>Legenda</strong> a <strong>Partner</strong> mají <strong>web bez reklam</strong>.<br>
-            • <strong>Legenda</strong> může přímo mazat návody (nejen žádat o smazání).<br>
-            • <strong>Partner</strong> má stejná práva jako Admin (mazání, schvalování, správa).
-        </p>
-    </div>
-</div>
-                <div class="section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
-                    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
-                        <span class="text-amber-500"><i class="fa-solid fa-trophy"></i></span>
-                        <span class="font-bold text-slate-800">Žebříček uživatelů</span>
+                <div class="border-t border-slate-200 pt-3 mt-3">
+                    <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 pb-2">
+                        <span class="text-green-500"><i class="fa-solid fa-gift"></i></span>
+                        <span class="font-bold text-slate-800">Dárky</span>
+                        <span id="gift-requests-count" class="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">0</span>
                     </h3>
-                    <div class="space-y-3" id="leaderboard-preview"></div>
+                    <div id="gift-requests-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar text-sm"></div>
                     <div class="text-center pt-2 border-t border-slate-100">
-                        <button onclick="openModal('all-leaderboard-modal')" class="text-xs font-bold text-amber-500 hover:underline transition">Zobrazit celý žebříček &rarr;</button>
-                    </div>
-                </div>
-                <!-- 📊 STATISTIKY (pod žebříčkem) -->
-                <div class="bg-white border border-slate-200/80 rounded-xl px-4 py-3 shadow-sm mt-4">
-                    <div class="flex items-center justify-center gap-2 mb-3 border-b border-slate-100 pb-2">
-                        <i class="fa-solid fa-chart-simple text-blue-400 text-xs"></i>
-                        <span class="text-xs font-bold text-slate-600">Statistiky</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] text-slate-500">
-                        <div class="flex items-center gap-1.5">
-                            <span>👀</span>
-                            <strong id="stats-today" class="text-slate-800">0</strong>
-                            <span>Návštěvy dnes</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span>🟢</span>
-                            <strong id="stats-online" class="text-blue-600">0</strong>
-                            <span>Online</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span>👤</span>
-                            <strong id="stats-users" class="text-green-600">0</strong>
-                            <span>Celkem zaregistrovaných uživatelů</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <span>📊</span>
-                            <strong id="stats-total" class="text-slate-700">0</strong>
-                            <span>Celkem návštěv od spuštění webu</span>
-                        </div>
+                        <button onclick="openModal('gift-requests-modal')" class="text-xs font-bold text-green-500 hover:underline transition">Spravovat &rarr;</button>
                     </div>
                 </div>
             </div>
-        </div>                                                                                       
-    </main>
-
-    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-12 py-8 w-full">
-        <div class="max-w-7xl mx-auto px-4 text-center space-y-4">
-            <div class="flex items-center justify-center space-x-2 text-white">
-                <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                <span class="font-black">VÍME JAK</span>
-            </div>
-            <p class="text-[10px] text-slate-600">&copy; 2026 Víme Jak. Všechna práva vyhrazená komunitě.</p>
         </div>
-    </footer>
+
+        <!-- 4. SLOUPEC: ÚROVNĚ -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="section-card bg-white border border-slate-200/80 rounded-2xl p-5 space-y-4">
+                <h3 class="font-bold text-slate-950 text-base flex items-center space-x-2 border-b border-slate-100 pb-3">
+                    <span class="text-amber-500"><i class="fa-solid fa-gift"></i></span>
+                    <span class="font-bold text-slate-800">Úrovně</span>
+                </h3>
+                <div class="space-y-3" id="levels-list"></div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3">
+                    <p class="text-[10px] text-slate-500 leading-relaxed">
+                        <strong class="text-slate-700">ℹ️ Info:</strong><br>
+                        • <strong>Partner</strong> jen jeden (první, kdo dosáhne 500k a souhlasí).<br>
+                        • <strong>Mistr</strong> a <strong>Legenda</strong> mají web bez reklam.<br>
+                        • <strong>Legenda</strong> může mazat návody.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 📢 REKLAMA - CELÁ ŠÍŘKA DOLE -->
+<div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pb-8 mt-4">
+    <div id="ad-sidebar-container" class="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-dashed border-amber-300 rounded-2xl p-4 shadow-sm w-full text-center flex flex-col items-center justify-center">
+        <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2">📢 Reklama</span>
+        <div class="bg-white rounded-xl p-4 max-w-md w-full flex flex-col items-center space-y-2">
+            <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center text-3xl">🛠️</div>
+            <h4 class="font-black text-slate-800 text-sm">Nářadí pro kutily</h4>
+            <p class="text-xs text-slate-500">Sleva 20 % na celý sortiment!</p>
+            <button class="w-full bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition max-w-xs">Zjistit více →</button>
+            <span class="text-[9px] text-slate-400">alza.cz</span>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-12 py-8 w-full">
+    <div class="max-w-[1600px] mx-auto px-4 text-center space-y-4">
+        <div class="flex items-center justify-center space-x-2 text-white">
+            <i class="fa-solid fa-lightbulb text-amber-500"></i>
+            <span class="font-black">VÍME JAK</span>
+        </div>
+        <p class="text-[10px] text-slate-600">&copy; 2026 Víme Jak. Všechna práva vyhrazená komunitě.</p>
+    </div>
+</footer>
 
     <!-- MODÁLNÍ OKNO: PŘIHLÁŠENÍ & REGISTRACE -->
     <div id="auth-modal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
@@ -800,13 +785,12 @@ const SUPABASE_URL = 'https://rynppuneqrnapsyplmlv.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_up1TsVGS-HlNhC4gS3NjxA_8xW1nYao';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             const rankDefinitions = [
-            { name: "Nováček", min: 0, max: 4999, reward: "Základní přístup", icon: "fa-seedling", iconColor: "text-emerald-600", borderStyle: "border-l-[5px] border-l-[#a3e635]", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100" },
-            { name: "Kutil", min: 5000, max: 9999, reward: "Odznak Kutil", icon: "fa-screwdriver", iconColor: "text-sky-500", borderStyle: "border-l-[5px] border-l-[#38bdf8]", badgeColor: "bg-sky-50 text-sky-700 border-sky-100" },
-            { name: "Mazák", min: 10000, max: 29999, reward: "Propiska s logem", icon: "fa-screwdriver-wrench", iconColor: "text-orange-500", borderStyle: "border-l-[5px] border-l-[#fb923c]", badgeColor: "bg-orange-50 text-orange-700 border-orange-100" },
-            { name: "Guru", min: 30000, max: 49999, reward: "Hrníček s logem", icon: "fa-gear", iconColor: "text-teal-600", borderStyle: "border-l-[5px] border-l-[#2dd4bf]", badgeColor: "bg-teal-50 text-teal-700 border-teal-100" },
-            { name: "Mistr", min: 50000, max: 99999, reward: "Gola sada", icon: "fa-award", iconColor: "text-fuchsia-600", borderStyle: "border-l-[5px] border-l-[#e879f9]", badgeColor: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100" },
-            { name: "Legenda", min: 100000, max: 499999, reward: "Web bez reklam + tričko s logem + právo žádat o smazání", icon: "fa-star", iconColor: "text-indigo-600", borderStyle: "border-l-[5px] border-l-[#818cf8]", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-100" },
-            { name: "Partner", min: 500000, max: Infinity, reward: "Web bez reklam + 5 % ze zisku + stejná práva jako Admin ", icon: "fa-crown", iconColor: "text-amber-500", borderStyle: "border-l-[5px] border-l-[#facc15]", badgeColor: "bg-amber-50 text-amber-700 border-amber-100" }
+            { name: "Nováček", min: 0, max: 9999, reward: "Základní přístup + odznak Nováček", icon: "fa-seedling", iconColor: "text-emerald-600", borderStyle: "border-l-[5px] border-l-[#a3e635]", badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+            { name: "Kutil", min: 10000, max: 29999, reward: "Odznak Kutil + PDF příručka", icon: "fa-screwdriver", iconColor: "text-sky-500", borderStyle: "border-l-[5px] border-l-[#38bdf8]", badgeColor: "bg-sky-50 text-sky-700 border-sky-100" },
+            { name: "Mazák", min: 30000, max: 49999, reward: "Odznak Mazák + online kurz + sleva 10 %", icon: "fa-screwdriver-wrench", iconColor: "text-orange-500", borderStyle: "border-l-[5px] border-l-[#fb923c]", badgeColor: "bg-orange-50 text-orange-700 border-orange-100" },
+            { name: "Mistr", min: 50000, max: 99999, reward: "Web bez reklam + odznak s logem + sleva 15 %", icon: "fa-award", iconColor: "text-fuchsia-600", borderStyle: "border-l-[5px] border-l-[#e879f9]", badgeColor: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100" },
+            { name: "Legenda", min: 100000, max: 499999, reward: "Správa návodů + propiska s logem + online konzultace + sleva 20 %", icon: "fa-star", iconColor: "text-indigo-600", borderStyle: "border-l-[5px] border-l-[#818cf8]", badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+            { name: "Partner", min: 500000, max: Infinity, reward: "Všechna práva + % ze zisku (dle dohody) + osobní setkání + sleva 25 %", icon: "fa-crown", iconColor: "text-amber-500", borderStyle: "border-l-[5px] border-l-[#facc15]", badgeColor: "bg-amber-50 text-amber-700 border-amber-100" }
         ];
 
         // ============================================================
